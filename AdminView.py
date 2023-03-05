@@ -8,9 +8,9 @@ import csv
 """
 README!!!!!!!!!
 left to do: finish up the insertion of the times 
-for db: write saveChanges() 
+for db: write saveChanges()
 """
-
+data = []
 def addFB():
     #if succesfull return a dictionary of the csv
     def validateFile(filepath):
@@ -34,7 +34,11 @@ def addFB():
                     messagebox.showerror("File error", "Invalid quantity {" + quant + "} on row " + str(i+2))
                     return -1
 
-                return dict_from_csv
+            returnval = []
+            for x in dict_from_csv:
+                i, q = x.values()
+                returnval.append((i, q))
+            return returnval
 
         except Exception as e:
             print("Error:", e)
@@ -49,11 +53,11 @@ def addFB():
             return
 
         #check headers
+        global data
         data = validateFile(filepath)
         if data == -1:
             return
-
-        print("Succesfully imported")
+        print("Succesfully imported file")
 
 
 
@@ -63,14 +67,17 @@ def addFB():
         #   so "save changes" does the commit)
 
         # TODO ---------------- db stuff (upload the dictionary to food items and location database) ------------------------
-        # for food items db, use 'data' variable
-        #       (is in format...  [{'item ': 'apple', 'quantity': '0'}, {'item ': 'grapes', 'quantity': '-20'}])
-        # and the below variables
+        # use the following variables:
 
+        global data
+        # list of tuples: [(item, quantity), ....]
+        #       i.e.  [('apple', '0'), ('grapes', '20')]
         newloc = locationInput.get(1.0, "end-1c")
-
-        # dictionary of times
         times = {"Monday": MInput.get(1.0, "end-1c")}
+
+        print("data from csv: ", data)
+        print("newloc: ", newloc)
+        print("times: ", times)
 
         newFBScreen.destroy()
 
