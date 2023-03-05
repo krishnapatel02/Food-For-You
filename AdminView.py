@@ -5,24 +5,40 @@ import tkinter.messagebox as messagebox
 import os
 import csv
 
-locations = ['FB1', 'FB20', 'aFB3']
+"""
+README!!!!!!!!!
+left to do: finish up the insertion of the times 
+for db: write saveChanges()
+"""
 
 def addFB():
-    global locations
+    #if succesfull return a dictionary of the csv
     def validateFile(filepath):
         #checking headers
-        file = open(filepath, 'r')
-        expected = ["item", "quantity"]
-        csv_reader = csv.reader(file, delimiter=',')
+        try:
+            file = open(filepath, 'r')
+            expected = ["item", "quantity"]
 
-        dict_from_csv = dict(list(csv_reader))
-        print(dict_from_csv)
+            dict_from_csv = list(csv.DictReader(file))
 
-        if expected != list(dict_from_csv.keys()):
-            print(list(dict_from_csv.keys()))
-            messagebox.showerror("Incorrect headers")
+            if expected != [x.strip() for x in dict_from_csv[0].keys()]:
+                messagebox.showerror("File error", "Incorrect headers")
+                return -1
 
-        #check quantities
+            for i, item in enumerate(dict_from_csv):
+                quant = item['quantity']
+
+                #checks if integer and non-negative
+                #isdigit() also returns false if digit is negative
+                if not (quant.isdigit()):
+                    messagebox.showerror("File error", "Invalid quantity {" + quant + "} on row " + str(i+2))
+                    return -1
+
+                return dict_from_csv
+
+        except Exception as e:
+            print("Error:", e)
+            messagebox.showerror("File error", "Having trouble uploading file. Please ensure the file uploaded is a CSV with two columns of 'item' and 'quantity'")
 
     def fileUpload():
         filepath = t.filedialog.askopenfilename()
@@ -30,27 +46,33 @@ def addFB():
 
         if fextension != '.csv':
             messagebox.showerror("Incorrect File Type. Must be CSV")
+            return
 
         #check headers
-        validateFile(filepath)
+        data = validateFile(filepath)
+        if data == -1:
+            return
+
+        print("Succesfully imported")
+
 
 
     def saveChanges():
-        #db stuff
+        # happens when user pushes "save changes"
+        #   (user can input times, location and upload files in any order
+        #   so "save changes" does the commit)
+
+        # TODO ---------------- db stuff (upload the dictionary to food items and location database) ------------------------
+        # for food items db, use 'data' variable
+        #       (is in format...  [{'item ': 'apple', 'quantity': '0'}, {'item ': 'grapes', 'quantity': '-20'}])
+        # and the below variables
+
+        newloc = locationInput.get(1.0, "end-1c")
+
+        # dictionary of times
+        times = {"Monday": MInput.get(1.0, "end-1c")}
+
         newFBScreen.destroy()
-
-    def check_input(event):
-        value = event.widget.get()
-        if value == '':
-            locationInput['values'] = locations
-        else:
-            data = []
-            for item in locations:
-                if value.lower() in item.lower():
-                    data.append(item)
-
-            locationInput['values'] = locationInput
-
 
 
     newFBScreen = t.Tk()
@@ -88,12 +110,10 @@ def addFB():
                            width=10
                            )
 
-    locationInput = ttk.Combobox(newFBScreen,
+    locationInput = t.Text(newFBScreen,
                            height=2,
                            width=10,
                               )
-    locationInput['values'] = locations
-    locationInput.bind('<KeyRelease>', check_input)
 
     locationlabel = t.Label(newFBScreen, text= "Insert Location")
 
