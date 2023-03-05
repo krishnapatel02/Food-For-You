@@ -8,7 +8,7 @@ import csv
 """
 README!!!!!!!!!
 left to do: finish up the insertion of the times 
-for db: write saveChanges()
+for db: write saveChanges() 
 """
 
 def addFB():
