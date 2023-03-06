@@ -12,16 +12,19 @@ class UpdateItem:
         self.root.geometry("500x200")
         self.locations = parent.locations
 
+        style = ttk.Style(root)
+        style.theme_use("clam")
+
         frame = Frame(root)
         frame.place(x=20, y=50, width=500, height=745)
 
-        Label(frame, text="item").place(x=25, y=25)
-        iteminput = Entry(frame, width=10, textvariable=self.item_to_update)
+        ttk.Label(frame, text="item").place(x=25, y=25)
+        iteminput = ttk.Entry(frame, width=10, textvariable=self.item_to_update)
         #iteminput.grid(row=1, column=0, sticky='w', padx=10, pady=11)
         iteminput.place(x=25, y=50)
 
-        Label(frame, text="quantity").place(x=150, y=25)
-        quantityinput = Entry(frame, width=10, textvariable=self.quantity_to_update)
+        ttk.Label(frame, text="quantity").place(x=150, y=25)
+        quantityinput = ttk.Entry(frame, width=10, textvariable=self.quantity_to_update)
         #quantityinput.grid(row=1, column=0, sticky='w', padx=10, pady=11)
         quantityinput.place(x=150, y=50)
 
@@ -57,11 +60,33 @@ class StaffGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Staff")
-        self.root.geometry("1000x500")
+        self.root.geometry("877x500")
         self.foodItemSearchText = StringVar()
         self.ascSort = BooleanVar()
         self.loc_to_update = StringVar()
         self.locations = []
+        self.bg = PhotoImage(file="backgroundimg1.png")
+        Label(root, image=self.bg).place(x=0, y=0)
+
+        style = ttk.Style(root)
+        style.theme_create("Custom")
+        #style.wm_attributes('-transparentcolor', '#ab23ff')
+        style.configure("TLabel", font=("arial", 11), background ="#fff")
+        style.configure("TButton", font=("arial", 11), background="#fff")
+        style.configure("TCheckbutton", font=("arial", 11), background ="#fff")
+        style.configure("TEntry", font=("arial"), background ="#fff")
+
+        #
+        # style.theme_settings("Custom", {
+        #     "TButton":{
+        #         "fieldbackground": [("!disabled", "#5C5C5C")]
+        #
+        #     },
+        #     "TLabel":{
+        #         "fieldbackground": [("active", "#90fc03")]
+        #     }
+        #
+        # })
 
         def connectToDatabase(user, password, host, port, database):
             pass
@@ -165,32 +190,33 @@ class StaffGUI:
             quantity = row[1]
             units = row[2]
             location = row[3]
-            
+
             window = Tk()
             ob = UpdateItem(window, root, item, quantity, units, location)
             window.mainloop()
 
-        Label(root, text="item to search").place(x=700, y=325)
+        ttk.Label(root, text="Search item").place(x=700, y=110)
 
-        ItemSearch = Entry(root, width=15)
-        ItemSearch.place(x=700, y=350)
-        SearchButton = Button(root, text="Search", width=15, height=1, command=search)
-        SearchButton.place(x=725, y=400)
+        ItemSearch = ttk.Entry(root, width=25)
+        ItemSearch.place(x=700, y=140)
+        SearchButton = ttk.Button(root, text="Search", width=15, command=search)
+        SearchButton.place(x=700, y=400)
 
-        Label(root, text="Sort quantity").place(x=700, y=50)
-        QuantitySortButton = Checkbutton(root, text="Sort Ascending", width=15, height=1, command=search, onvalue=True, offvalue=False)
-        QuantitySortButton.place(x=700, y=100)
+        #ttk.Label(root, text="Sort quantity").place(x=700, y=50)
+        QuantitySortButton = ttk.Checkbutton(root, text="Sort Ascending", width=15, command=search, onvalue=True,
+                                         offvalue=False)
+        QuantitySortButton.place(x=700, y=300)
 
-        Label(root, text="Sort by location").place(x=700, y=200)
+        ttk.Label(root, text="Sort by location").place(x=700, y=200)
         LocationFilter = ttk.Combobox(root, values=self.locations)
-        LocationFilter.place(x=700, y=250)
+        LocationFilter.place(x=700, y=240)
 
         # UpdateItemButton = Button(text="Update Item", command=update)
         # UpdateItemButton.place(x=300, y=400)
 
         viewFrame = Frame(root, bd=5, relief='ridge', bg='wheat')
-        viewFrame.place(x=20, y=100, width=500, height=300)
-
+        viewFrame.place(x=30, y=110, width=600, height=350)
+                                            #800
         xScroll = Scrollbar(viewFrame, orient=HORIZONTAL)
         yScroll = Scrollbar(viewFrame, orient=VERTICAL)
         table = ttk.Treeview(viewFrame, columns=('item_to_filter', 'quantity_to_filter', 'units', 'location_to_filter'), xscrollcommand=xScroll.set,
@@ -212,6 +238,7 @@ class StaffGUI:
         # get all values and pack the table on to the screen
         fetchData()
         table.pack(fill=BOTH, expand=1)
+
 
 
 
