@@ -119,7 +119,7 @@ class StaffGUI:
 
 
         def search():
-            item = ItemSearch.get(1.0, "end-1c")
+            item = ItemSearch.get()
             locationBool = True
             itemBool = True
             location = LocationFilter.get()
