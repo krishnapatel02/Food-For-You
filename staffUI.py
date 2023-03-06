@@ -122,8 +122,6 @@ class StaffGUI:
         self.ascSort = BooleanVar()
         self.loc_to_update = StringVar()
         self.locations = fetchLocations()
-        self.bg = PhotoImage(file="backgroundimg1.png")
-        Label(root, image=self.bg).place(x=0, y=0)
         try:
             self.bg = PhotoImage(file="img\\backgroundimg.png")
             Label(root, image=self.bg, borderwidth=0, highlightthickness=0).place(x=0, y=0)
