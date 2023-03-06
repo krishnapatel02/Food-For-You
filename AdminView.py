@@ -9,11 +9,12 @@ import timepicker as time
 """
 README!!!!!!!!!
 for db: write saveChanges()
+        view data on main screen
 
 for KS:
 allow times to be none (store is closed)
 verify that all times are times are inputted before submit
-
+s
 """
 data = []
 def addFB():
@@ -97,99 +98,61 @@ def addFB():
     newFBScreen = t.Tk()
     newFBScreen.geometry("800x400")
 
-    T = t.Label(newFBScreen,
-        text="Insert times"
-    )
-    MLabel = t.Label(newFBScreen,
-        text="Monday"
-    )
-    TLabel = t.Label(newFBScreen,
-        text="Tuesday"
-    )
-    WLabel = t.Label(newFBScreen,
-        text="Wednesday"
-    )
-    RLabel = t.Label(newFBScreen,
-        text="Thursday"
-    )
-    FLabel = t.Label(newFBScreen,
-        text="Friday"
-    )
-    SLabel = t.Label(newFBScreen,
-        text="Saturday"
-    )
-    ULabel = t.Label(newFBScreen,
-        text="Sunday"
-    )
-
     locationInput = t.Text(newFBScreen, height=2, width=10)
+    locationInput.place(x=75, y=200)
 
-    locationlabel = t.Label(newFBScreen, text= "Insert Location")
+    fileUploadButton = t.Button(newFBScreen, text="Upload Data", height=2, width=10, command=fileUpload)
+    fileUploadButton.place(x=400, y=150)
 
-    fileUploadButton = t.Button(newFBScreen,
-                            text="Upload Data",
-                            height=2,
-                            width=10,
-                            command=fileUpload
-                            )
+    submitButton = t.Button(newFBScreen, text="Save changes", height=2, width=10, command=saveChanges)
+    submitButton.place(x=675, y=200)
 
-    submitButton = t.Button(newFBScreen,
-                            text="Save changes",
-                            height=2,
-                            width=10,
-                            command=saveChanges
-                            )
-    T.place(x=75, y=25)
-
+    t.Label(newFBScreen, text="Insert times").place(x=75, y=25)
     t.Label(newFBScreen, text="Open").place(x=25, y=75)
     t.Label(newFBScreen, text="Close").place(x=25, y=100)
+    t.Label(newFBScreen, text="Insert Location").place(x=75, y=150)
 
-    MLabel.place(x=75, y=50)
+    t.Label(newFBScreen,text="Monday").place(x=75, y=50)
     MtimeOpen = time.App(newFBScreen)
     MtimeOpen.place(x=75, y=75)
     MtimeClose = time.App(newFBScreen)
     MtimeClose.place(x=75, y=100)
 
-    TLabel.place(x=175, y=50)
+    t.Label(newFBScreen,text="Tuesday").place(x=175, y=50)
     TtimeOpen = time.App(newFBScreen)
     TtimeOpen.place(x=175, y=75)
     TtimeClose = time.App(newFBScreen)
     TtimeClose.place(x=175, y=100)
 
-    WLabel.place(x=275, y=50)
+    t.Label(newFBScreen,text="Wednesday").place(x=275, y=50)
     WtimeOpen = time.App(newFBScreen)
     WtimeOpen.place(x=275, y=75)
     WtimeClose = time.App(newFBScreen)
     WtimeClose.place(x=275, y=100)
 
-    RLabel.place(x=375, y=50)
+    t.Label(newFBScreen,text="Thursday").place(x=375, y=50)
     RtimeOpen = time.App(newFBScreen)
     RtimeOpen.place(x=375, y=75)
     RtimeClose = time.App(newFBScreen)
     RtimeClose.place(x=375, y=100)
 
-    FLabel.place(x=475, y=50)
+    t.Label(newFBScreen,text="Friday").place(x=475, y=50)
     FtimeOpen = time.App(newFBScreen)
     FtimeOpen.place(x=475, y=75)
     FtimeClose = time.App(newFBScreen)
     FtimeClose.place(x=475, y=100)
 
-    SLabel.place(x=575, y=50)
+    t.Label(newFBScreen,text="Saturday").place(x=575, y=50)
     StimeOpen = time.App(newFBScreen)
     StimeOpen.place(x=575, y=75)
     StimeClose = time.App(newFBScreen)
     StimeClose.place(x=575, y=100)
 
-    ULabel.place(x=675, y=50)
+    t.Label(newFBScreen,text="Sunday").place(x=675, y=50)
     UtimeOpen = time.App(newFBScreen)
     UtimeOpen.place(x=675, y=75)
     UtimeClose = time.App(newFBScreen)
     UtimeClose.place(x=675, y=100)
-
-    locationlabel.place(x=75,y=150)
-    locationInput.place(x=75,y=200)
-    fileUploadButton.place(x=400,y=150)
-    submitButton.place(x=675, y=200)
 
     #TODO show fb hours database
 
@@ -200,14 +163,7 @@ def addFB():
 mainScreen = t.Tk()
 mainScreen.geometry("1000x500")
 
-AddFBButton = t.Button(mainScreen,
-                            text="New Food Bank +",
-                            width=20,
-                            height=3,
-                            command=addFB
-                            )
-
-
+AddFBButton = t.Button(mainScreen, text="New Food Bank +", width=20, height=3, command=addFB)
 AddFBButton.place(x=700, y=200)
 
 mainScreen.mainloop()
