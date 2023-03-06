@@ -191,6 +191,8 @@ def addFB():
     fileUploadButton.place(x=400,y=150)
     submitButton.place(x=675, y=200)
 
+    #TODO show fb hours database
+
     newFBScreen.mainloop()
 
 
