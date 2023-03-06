@@ -265,8 +265,9 @@ class StaffGUI:
 
 root = Tk()
 ob = StaffGUI(root)
+root.mainloop()
 
-child = Tk()
-UpdateItem(child, "apples", 1, "oz", "123 ferry street")
-child.mainloop()
+#child = Tk()
+#UpdateItem(child, "apples", 1, "oz", "123 ferry street")
+#child.mainloop()
 #root.mainloop()
