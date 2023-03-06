@@ -4,11 +4,16 @@ from tkinter import filedialog
 import tkinter.messagebox as messagebox
 import os
 import csv
+import timepicker as time
 
 """
 README!!!!!!!!!
-left to do: finish up the insertion of the times 
 for db: write saveChanges()
+
+for KS:
+allow times to be none (store is closed)
+verify that all times are times are inputted before submit
+
 """
 data = []
 def addFB():
@@ -31,7 +36,7 @@ def addFB():
                 #checks if integer and non-negative
                 #isdigit() also returns false if digit is negative
                 if not (quant.isdigit()):
-                    messagebox.showerror("File error", "Invalid quantity {" + quant + "} on row " + str(i+2))
+                    messagebox.showerror("File error", "Invalid quantity (" + quant + ") on row " + str(i+2))
                     return -1
 
             returnval = []
@@ -66,25 +71,31 @@ def addFB():
         #   (user can input times, location and upload files in any order
         #   so "save changes" does the commit)
 
-        # TODO ---------------- db stuff (upload the dictionary to food items and location database) ------------------------
-        # use the following variables:
-
         global data
-        # list of tuples: [(item, quantity), ....]
-        #       i.e.  [('apple', '0'), ('grapes', '20')]
         newloc = locationInput.get(1.0, "end-1c")
-        times = {"Monday": MInput.get(1.0, "end-1c")}
+        times = {"Monday": (MtimeOpen.getTime(), MtimeClose.getTime()),
+                 "Tuesday": (TtimeOpen.getTime(), TtimeClose.getTime()),
+                 "Wednesday": (WtimeOpen.getTime(), WtimeClose.getTime()),
+                 "Thursday": (RtimeOpen.getTime(), RtimeClose.getTime()),
+                 "Friday": (FtimeOpen.getTime(), FtimeClose.getTime()),
+                "Saturday": (StimeOpen.getTime(), StimeClose.getTime()),
+                "Sunday": (UtimeOpen.getTime(), UtimeClose.getTime())
+                 }
+
 
         print("data from csv: ", data)
         print("newloc: ", newloc)
         print("times: ", times)
 
+        # TODO ---------------- db stuff (upload the dictionary to food items and location database) ------------------------
+        #   use the variables that are printed above
+
+        #when finished up
         newFBScreen.destroy()
 
 
     newFBScreen = t.Tk()
-    newFBScreen.geometry("500x500")
-
+    newFBScreen.geometry("800x400")
 
     T = t.Label(newFBScreen,
         text="Insert times"
@@ -102,7 +113,7 @@ def addFB():
         text="Thursday"
     )
     FLabel = t.Label(newFBScreen,
-        text="Sunday"
+        text="Friday"
     )
     SLabel = t.Label(newFBScreen,
         text="Saturday"
@@ -111,21 +122,12 @@ def addFB():
         text="Sunday"
     )
 
-    ## will the hours be text input or dropdown?
-    MInput = t.Text(newFBScreen,
-                           height=2,
-                           width=10
-                           )
-
-    locationInput = t.Text(newFBScreen,
-                           height=2,
-                           width=10,
-                              )
+    locationInput = t.Text(newFBScreen, height=2, width=10)
 
     locationlabel = t.Label(newFBScreen, text= "Insert Location")
 
     fileUploadButton = t.Button(newFBScreen,
-                            text="Upload File",
+                            text="Upload Data",
                             height=2,
                             width=10,
                             command=fileUpload
@@ -138,23 +140,56 @@ def addFB():
                             command=saveChanges
                             )
     T.place(x=75, y=25)
+
+    t.Label(newFBScreen, text="Open").place(x=25, y=75)
+    t.Label(newFBScreen, text="Close").place(x=25, y=100)
+
     MLabel.place(x=75, y=50)
-    MInput.place(x=75, y=75)
-    TLabel.place(x=75, y=150)
-    WLabel.place(x=75, y=200)
-    RLabel.place(x=75, y=300)
-    FLabel.place(x=75, y=400)
-    SLabel.place(x=75, y=500)
-    ULabel.place(x=75, y=600)
-    locationlabel.place(x=250,y=25)
-    locationInput.place(x=250,y=100)
-    fileUploadButton.place(x=250,y=200)
-    submitButton.place(x=250, y=300)
+    MtimeOpen = time.App(newFBScreen)
+    MtimeOpen.place(x=75, y=75)
+    MtimeClose = time.App(newFBScreen)
+    MtimeClose.place(x=75, y=100)
 
+    TLabel.place(x=175, y=50)
+    TtimeOpen = time.App(newFBScreen)
+    TtimeOpen.place(x=175, y=75)
+    TtimeClose = time.App(newFBScreen)
+    TtimeClose.place(x=175, y=100)
 
+    WLabel.place(x=275, y=50)
+    WtimeOpen = time.App(newFBScreen)
+    WtimeOpen.place(x=275, y=75)
+    WtimeClose = time.App(newFBScreen)
+    WtimeClose.place(x=275, y=100)
 
-    ## TODO: insert item, quanity and location from selection
-    ##       autofill item
+    RLabel.place(x=375, y=50)
+    RtimeOpen = time.App(newFBScreen)
+    RtimeOpen.place(x=375, y=75)
+    RtimeClose = time.App(newFBScreen)
+    RtimeClose.place(x=375, y=100)
+
+    FLabel.place(x=475, y=50)
+    FtimeOpen = time.App(newFBScreen)
+    FtimeOpen.place(x=475, y=75)
+    FtimeClose = time.App(newFBScreen)
+    FtimeClose.place(x=475, y=100)
+
+    SLabel.place(x=575, y=50)
+    StimeOpen = time.App(newFBScreen)
+    StimeOpen.place(x=575, y=75)
+    StimeClose = time.App(newFBScreen)
+    StimeClose.place(x=575, y=100)
+
+    ULabel.place(x=675, y=50)
+    UtimeOpen = time.App(newFBScreen)
+    UtimeOpen.place(x=675, y=75)
+    UtimeClose = time.App(newFBScreen)
+    UtimeClose.place(x=675, y=100)
+
+    locationlabel.place(x=75,y=150)
+    locationInput.place(x=75,y=200)
+    fileUploadButton.place(x=400,y=150)
+    submitButton.place(x=675, y=200)
 
     newFBScreen.mainloop()
 
