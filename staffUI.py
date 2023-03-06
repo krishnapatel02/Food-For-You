@@ -110,7 +110,7 @@ class StaffGUI:
         #
         # })
 
-
+       
 
         def fetchLocations():
             cursor.execute("SELECT fb.Location from food_bank fb order by fb.Location asc")
@@ -118,6 +118,7 @@ class StaffGUI:
             for row in cursor:
                 for col in row:
                     self.locations.append(col)
+
         fetchLocations()
 
         def fetchData():
@@ -166,7 +167,6 @@ class StaffGUI:
             else:
                 cursor.execute(
                     f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id)")
-            #result = cursor.fetchall()
 
 
         def update(e):
@@ -191,8 +191,8 @@ class StaffGUI:
         SearchButton.place(x=700, y=400)
 
         #ttk.Label(root, text="Sort quantity").place(x=700, y=50)
-        QuantitySortButton = ttk.Checkbutton(root, text="Sort Ascending", width=15, command=search, onvalue=True,
-                                         offvalue=False)
+        QuantitySortButton = ttk.Checkbutton(root, text="Sort Ascending", width=15, command=fetchData, onvalue=True,
+                                         offvalue=False,  variable=self.ascSort)
         QuantitySortButton.place(x=700, y=300)
 
         ttk.Label(root, text="Sort by location").place(x=700, y=200)
@@ -203,7 +203,7 @@ class StaffGUI:
         # UpdateItemButton.place(x=300, y=400)
 
         viewFrame = Frame(root, bd=5, relief='ridge', bg='wheat')
-        viewFrame.place(x=30, y=110, width=650, height=350)
+        viewFrame.place(x=30, y=110, width=600, height=350)
                                             #800
         xScroll = Scrollbar(viewFrame, orient=HORIZONTAL)
         yScroll = Scrollbar(viewFrame, orient=VERTICAL)
@@ -222,8 +222,6 @@ class StaffGUI:
         table.column("fid_to_filter", width=10);
         table.column("location_to_filter", width=100)
         table['show'] = 'headings'
-
-        table.bind('<ButtonRelease-1>', update)
 
         # get all values and pack the table on to the screen
         fetchData()
