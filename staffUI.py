@@ -6,15 +6,14 @@ from tkinter import messagebox
 #https://www.google.com/search?q=create+theme+tkinter+python&rlz=1C1VDKB_enUS1034US1034&sxsrf=AJOqlzVyUBHWRfGeC6eRK0zbFZLyOMlJmw%3A1678037292298&ei=LNEEZN7tEY660PEPkbOW6AE&ved=0ahUKEwjes-iFqMX9AhUOHTQIHZGZBR0Q4dUDCBA&uact=5&oq=create+theme+tkinter+python&gs_lcp=Cgxnd3Mtd2l6LXNlcnAQAzIICCEQoAEQwwQyCAghEKABEMMEOgoIABBHENYEELADOgcIIxCwAhAnOggIABAIEAcQHjoICAAQCBAeEA06BQgAEIYDOgoIIRCgARDDBBAKSgQIQRgAUNoDWMMJYO0KaAFwAXgAgAF3iAH5BJIBAzUuMpgBAKABAcgBCMABAQ&sclient=gws-wiz-serp#fpstate=ive&vld=cid:55497400,vid:fOVmMiyezMU
 
 def fetchLocations():
-    return ["123 ferry street"]
-    # connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3624, "foodforyou")
-    # cursor = connection.cursor()
-    # cursor.execute("SELECT fb.Location from food_bank fb")
-    # for row in cursor:
-    #     for col in row:
-    #         locations.append(col)
-    # locations.append(None)
-    # return locations
+    connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3624, "foodforyou")
+    cursor = connection.cursor()
+    cursor.execute("SELECT fb.Location from food_bank fb")
+    for row in cursor:
+         for col in row:
+             locations.append(col)
+    locations.append(None)
+    return locations
 
 class UpdateItem:
     def __init__(self, screen, item, quantity, units, location):
