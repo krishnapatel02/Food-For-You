@@ -60,13 +60,23 @@ class StaffGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Staff")
-        self.root.geometry("877x500")
+        self.screenWidth = 900
+        self.root.geometry(f'{self.screenWidth}x545')
         self.foodItemSearchText = StringVar()
         self.ascSort = BooleanVar()
         self.loc_to_update = StringVar()
         self.locations = []
-        self.bg = PhotoImage(file="backgroundimg1.png")
-        Label(root, image=self.bg).place(x=0, y=0)
+        try:
+            self.bg = PhotoImage(file="img\\backgroundimg.png")
+            Label(root, image=self.bg, borderwidth=0, highlightthickness=0).place(x=0, y=0)
+
+            self.trailing_img = PhotoImage(file="img\\trailingIMG.png")
+            for i in range(0, self.screenWidth, self.trailing_img.width()):
+                Label(root, image=self.trailing_img, bg='white').place(x=i, y=480)
+        except:
+            pass
+
+        root.configure(background='white')
 
         style = ttk.Style(root)
         style.theme_create("Custom")
@@ -74,7 +84,7 @@ class StaffGUI:
         style.configure("TLabel", font=("arial", 11), background ="#fff")
         style.configure("TButton", font=("arial", 11), background="#fff")
         style.configure("TCheckbutton", font=("arial", 11), background ="#fff")
-        style.configure("TEntry", font=("arial"), background ="#fff")
+        style.configure("TEntry", font=("arial", 11))
 
         #
         # style.theme_settings("Custom", {
@@ -197,7 +207,7 @@ class StaffGUI:
 
         ttk.Label(root, text="Search item").place(x=700, y=110)
 
-        ItemSearch = ttk.Entry(root, width=25)
+        ItemSearch = ttk.Entry(root, width=20, font=("arial", 9))
         ItemSearch.place(x=700, y=140)
         SearchButton = ttk.Button(root, text="Search", width=15, command=search)
         SearchButton.place(x=700, y=400)
