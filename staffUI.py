@@ -5,18 +5,20 @@ from tkinter import messagebox
 
 #https://www.google.com/search?q=create+theme+tkinter+python&rlz=1C1VDKB_enUS1034US1034&sxsrf=AJOqlzVyUBHWRfGeC6eRK0zbFZLyOMlJmw%3A1678037292298&ei=LNEEZN7tEY660PEPkbOW6AE&ved=0ahUKEwjes-iFqMX9AhUOHTQIHZGZBR0Q4dUDCBA&uact=5&oq=create+theme+tkinter+python&gs_lcp=Cgxnd3Mtd2l6LXNlcnAQAzIICCEQoAEQwwQyCAghEKABEMMEOgoIABBHENYEELADOgcIIxCwAhAnOggIABAIEAcQHjoICAAQCBAeEA06BQgAEIYDOgoIIRCgARDDBBAKSgQIQRgAUNoDWMMJYO0KaAFwAXgAgAF3iAH5BJIBAzUuMpgBAKABAcgBCMABAQ&sclient=gws-wiz-serp#fpstate=ive&vld=cid:55497400,vid:fOVmMiyezMU
 
+connection = None
+cursor = None
+
 def fetchLocations():
-    connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3624, "foodforyou")
-    cursor = connection.cursor()
-    cursor.execute("SELECT fb.Location from food_bank fb")
+    cursor.execute("SELECT fb.Location from food_bank fb order by fb.Location ASC")
+    locations = []
+    locations.append(None)
     for row in cursor:
          for col in row:
              locations.append(col)
-    locations.append(None)
     return locations
 
 class UpdateItem:
-    def __init__(self, screen, item, quantity, units, location):
+    def __init__(self, screen, item, quantity, units, location, food_id):
         self.screen = screen
         self.screen.title("Updating")
         self.screen.geometry("500x200")
@@ -60,7 +62,7 @@ class UpdateItem:
         locationDD = ttk.Combobox(screen, values=self.locations, textvariable=self.loc_to_update)
         locationDD.insert(0, location)
         locationDD.place(x=275, y=50)
-
+        print(location)
 
         def saveChanges():
 
@@ -80,9 +82,14 @@ class UpdateItem:
                 clear()
                 messagebox.showinfo('Success', f'Course CRN: {crn} is updated in the database')
             """
+                cursor.execute(f"select fb.fb_id from food_bank fb where fb.Location = '{locationDD.get()}'")
+                fb_id = [int(i[0]) for i in cursor.fetchall()][0]
+                cursor.execute(f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{quantityinput.get()}', Units='{unitsInput.get()}', Location='{locationDD.get()}', fb_id='{fb_id}' where fd_ID='{int(food_id)}'")
+                connection.commit()
 
         submitButton = Button(screen, text="Save changes", height=2, width=10, command=saveChanges)
         submitButton.place(x=400, y=150)
+        
 
 
 
@@ -101,7 +108,7 @@ def connectToDatabase(user, password, host, port, database):
                 passwd=password,
                 port=port,
                 database=database)
-            print("Connected")
+            #print("Connected")
         except:
             print("Connection failed")
             dbconnect = None
@@ -109,7 +116,8 @@ def connectToDatabase(user, password, host, port, database):
     return dbconnect
 
 
-connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3624, "foodforyou")
+#connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3624, "foodforyou")
+connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
 cursor = connection.cursor()
 
 
@@ -208,10 +216,11 @@ class StaffGUI:
             item = row[0]
             quantity = row[1]
             units = row[2]
-            location = row[3]
+            food_id = row[3]
+            location = row[4]
 
             screen = Tk()
-            UpdateItem(screen, item, quantity, units, location)
+            UpdateItem(screen, item, quantity, units, location, food_id)
 
         ttk.Label(root, text="Search item").place(x=700, y=110)
 
@@ -256,6 +265,8 @@ class StaffGUI:
         table['show'] = 'headings'
 
         # get all values and pack the table on to the screen
+
+        table.bind('<ButtonRelease-1>', update)
         fetchData()
         table.pack(fill=BOTH, expand=1)
 
