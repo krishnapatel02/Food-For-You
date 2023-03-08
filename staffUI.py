@@ -84,7 +84,20 @@ class UpdateItem:
             """
                 cursor.execute(f"select fb.fb_id from food_bank fb where fb.Location = '{locationDD.get()}'")
                 fb_id = [int(i[0]) for i in cursor.fetchall()][0]
-                cursor.execute(f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{quantityinput.get()}', Units='{unitsInput.get()}', Location='{locationDD.get()}', fb_id='{fb_id}' where fd_ID='{int(food_id)}'")
+                if(location == locationDD.get()):
+                    cursor.execute(f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{quantityinput.get()}', Units='{unitsInput.get()}', Location='{locationDD.get()}', fb_id='{fb_id}' where fd_ID='{int(food_id)}'")
+                else:
+                    cursor.execute(f"select fi.Quantity from food_item fi where fi.fd_id = '{food_id}'")
+                    origQuantity = [int(i[0]) for i in cursor.fetchall()][0]
+                    cursor.execute(f"select fi.fd_id from food_item fi join food_bank fb using (fb_id) where fb_id = '{fb_id}' and fi.Item_name = '{iteminput.get()}'")
+                    newFoodID = [int(i[0]) for i in cursor.fetchall()][0]
+                    cursor.execute(f"select fi.Quantity from food_item fi where fi.fd_id = '{newFoodID}'")
+                    existingNewQuantity = [int(i[0]) for i in cursor.fetchall()][0]
+                    newOrigQuantity = origQuantity - int(quantityinput.get())
+                    cursor.execute(
+                    f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{newOrigQuantity}', Units='{unitsInput.get()}', Location='{locationDD.get()}', fb_id='{fb_id}' where fd_ID='{int(food_id)}'")
+                    cursor.execute(
+                    f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{existingNewQuantity + int(quantityinput.get())}', Units='{unitsInput.get()}', Location='{locationDD.get()}', fb_id='{fb_id}' where fd_ID='{int(newFoodID)}'")
                 connection.commit()
 
         submitButton = Button(screen, text="Save changes", height=2, width=10, command=saveChanges)
@@ -116,8 +129,8 @@ def connectToDatabase(user, password, host, port, database):
     return dbconnect
 
 
-#connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3624, "foodforyou")
-connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
+connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3624, "foodforyou")
+#connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
 cursor = connection.cursor()
 
 
