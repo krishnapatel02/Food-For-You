@@ -95,7 +95,7 @@ class UpdateItem:
                     existingNewQuantity = [int(i[0]) for i in cursor.fetchall()][0]
                     newOrigQuantity = origQuantity - int(quantityinput.get())
                     cursor.execute(
-                    f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{newOrigQuantity}', Units='{unitsInput.get()}', Location='{locationDD.get()}', fb_id='{fb_id}' where fd_ID='{int(food_id)}'")
+                    f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{newOrigQuantity}', Units='{unitsInput.get()}', Location='{location}', fb_id='{fb_id}' where fd_ID='{int(food_id)}'")
                     cursor.execute(
                     f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{existingNewQuantity + int(quantityinput.get())}', Units='{unitsInput.get()}', Location='{locationDD.get()}', fb_id='{fb_id}' where fd_ID='{int(newFoodID)}'")
                 connection.commit()
