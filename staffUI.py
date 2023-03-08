@@ -3,19 +3,22 @@ from tkinter import ttk
 import mysql.connector
 from tkinter import messagebox
 
-#https://www.google.com/search?q=create+theme+tkinter+python&rlz=1C1VDKB_enUS1034US1034&sxsrf=AJOqlzVyUBHWRfGeC6eRK0zbFZLyOMlJmw%3A1678037292298&ei=LNEEZN7tEY660PEPkbOW6AE&ved=0ahUKEwjes-iFqMX9AhUOHTQIHZGZBR0Q4dUDCBA&uact=5&oq=create+theme+tkinter+python&gs_lcp=Cgxnd3Mtd2l6LXNlcnAQAzIICCEQoAEQwwQyCAghEKABEMMEOgoIABBHENYEELADOgcIIxCwAhAnOggIABAIEAcQHjoICAAQCBAeEA06BQgAEIYDOgoIIRCgARDDBBAKSgQIQRgAUNoDWMMJYO0KaAFwAXgAgAF3iAH5BJIBAzUuMpgBAKABAcgBCMABAQ&sclient=gws-wiz-serp#fpstate=ive&vld=cid:55497400,vid:fOVmMiyezMU
+# https://www.google.com/search?q=create+theme+tkinter+python&rlz=1C1VDKB_enUS1034US1034&sxsrf=AJOqlzVyUBHWRfGeC6eRK0zbFZLyOMlJmw%3A1678037292298&ei=LNEEZN7tEY660PEPkbOW6AE&ved=0ahUKEwjes-iFqMX9AhUOHTQIHZGZBR0Q4dUDCBA&uact=5&oq=create+theme+tkinter+python&gs_lcp=Cgxnd3Mtd2l6LXNlcnAQAzIICCEQoAEQwwQyCAghEKABEMMEOgoIABBHENYEELADOgcIIxCwAhAnOggIABAIEAcQHjoICAAQCBAeEA06BQgAEIYDOgoIIRCgARDDBBAKSgQIQRgAUNoDWMMJYO0KaAFwAXgAgAF3iAH5BJIBAzUuMpgBAKABAcgBCMABAQ&sclient=gws-wiz-serp#fpstate=ive&vld=cid:55497400,vid:fOVmMiyezMU
 
 connection = None
 cursor = None
+font = "arial"
+searchInputSize =9
 
 def fetchLocations():
     cursor.execute("SELECT fb.Location from food_bank fb order by fb.Location ASC")
     locations = []
     locations.append(None)
     for row in cursor:
-         for col in row:
-             locations.append(col)
+        for col in row:
+            locations.append(col)
     return locations
+
 
 class UpdateItem:
     def __init__(self, screen, item, quantity, units, location, food_id):
@@ -28,50 +31,74 @@ class UpdateItem:
         self.quantity_to_update = IntVar()
         self.loc_to_update = StringVar()
         self.units_to_update = StringVar()
+        self.screenopt = StringVar()
 
+        global font
+        global searchInputSize
 
         screen.configure(background='white')
 
         style = ttk.Style(screen)
-        style.theme_create("Custom")
-        #style.wm_attributes('-transparentcolor', '#ab23ff')
-        style.configure("TLabel", font=("arial", 11), background ="#fff")
-        style.configure("TButton", font=("arial", 11), background="#fff")
-        style.configure("TCheckbutton", font=("arial", 11), background ="#fff")
-        style.configure("TEntry", font=("arial", 11))
+        # style.theme_create("Custom")
+        # style.wm_attributes('-transparentcolor', '#ab23ff')
+        style.configure("TLabel", font=(font, 11), background="lightgray")
+        style.configure('TButton', font=(font, 11), background="lightblue")
+        style.map('TButton', background=[('!active', 'lightblue'), ('disabled', 'lightblue'), ('active', 'lightblue')])
+        style.configure("TCheckbutton", font=(font, 11), activebackground="pink", background="lightgray")
 
 
         ttk.Label(screen, text="item").place(x=25, y=25)
-        iteminput = ttk.Entry(screen, width=10, textvariable=self.item_to_update)
+        iteminput = ttk.Entry(screen, width=10, textvariable=self.item_to_update, font=(font, searchInputSize), state="disabled")
         iteminput.insert(0, item)
         #iteminput.grid(row=1, column=0, sticky='w', padx=10, pady=11)
         iteminput.place(x=25, y=50)
 
-        ttk.Label(screen, text="quantity").place(x=150, y=25)
-        quantityinput = ttk.Entry(screen, width=10, textvariable=self.quantity_to_update)
+        ttk.Label(screen, text="quantity").place(x=125, y=25)
+        quantityinput = ttk.Entry(screen, width=10, textvariable=self.quantity_to_update, font=(font, searchInputSize))
         quantityinput.insert(0, quantity)
         #quantityinput.grid(row=1, column=0, sticky='w', padx=10, pady=11)
-        quantityinput.place(x=150, y=50)
+        quantityinput.place(x=125, y=50)
 
-        ttk.Label(screen, text="units").place(x=150, y=100)
-        unitsInput = ttk.Entry(screen, width=10, textvariable=self.units_to_update)
+        ttk.Label(screen, text="units").place(x=225, y=25)
+        unitsInput = ttk.Entry(screen, width=10, textvariable=self.units_to_update, font=(font, searchInputSize))
         unitsInput.insert(0, units)
-        unitsInput.place(x=150, y=125)
+        unitsInput.place(x=225, y=50)
 
-        ttk.Label(screen, text="location").place(x=265, y=25)
-        locationDD = ttk.Combobox(screen, values=self.locations, textvariable=self.loc_to_update)
-        locationDD.insert(0, location)
-        locationDD.place(x=275, y=50)
-        print(location)
+        ttk.Label(screen, text="location").place(x=325, y=25)
+        ttk.Label(screen, text=location, font=(font, 9)).place(x=325, y=50)
+
+        movelbl = ttk.Label(screen, text="location to move to")
+
+        locationDD = ttk.Combobox(screen, values=self.locations, textvariable=self.loc_to_update,
+                                  font=(font, searchInputSize))
+        #locationDD.insert(0, location)
+
+        def showScreen(a, b, c):
+            s = self.screenopt.get()
+            if s == "update":
+                movelbl.pack_forget()
+                #movelbl.destroy()
+                locationDD.pack_forget()
+            else:
+                movelbl.pack(side=RIGHT)
+                #movelbl.place(x=325, y=75)
+                locationDD.pack(side = RIGHT)
+                #locationDD.place(x=325, y=100)
+
+        self.screenopt.set("update")
+        options = ["update", "move"]
+        self.screenopt.trace('w', showScreen)
+        tabControl = OptionMenu(screen, self.screenopt, *options)
+        tabControl.pack()
 
         def saveChanges():
 
-                        #If one or more required field is empty, show error
+            # If one or more required field is empty, show error
             if (iteminput.get() == "" or quantityinput.get() == "" or locationDD.get() == "" or unitsInput.get() == ""):
-                    messagebox.showerror("ERROR", "Please enter the correct data in each catagory")
-            #otherwise update all categories
+                messagebox.showerror("ERROR", "Please enter the correct data in each catagory")
+            # otherwise update all categories
             else:
-                #TODO
+                # TODO
                 """
                 con = mysql.connect(host="ix.cs.uoregon.edu", port=3673, user="prodrig2", password="irodmario@2001", database="422json")
                 custer.execute('UPDATE 422json.naturalsciences SET COURSE_NAME=%s, TERM=%s, INSTRUCTOR=%s, APREC=%s, BPREC=%s, CPREC=%s, DPREC=%s, FPREC=%s, faculty=%s where crn=%s',
@@ -86,28 +113,27 @@ class UpdateItem:
                 currentfb_id = fb_id = [int(i[0]) for i in cursor.fetchall()][0]
                 cursor.execute(f"select fb.fb_id from food_bank fb where fb.Location = '{locationDD.get()}'")
                 fb_id = [int(i[0]) for i in cursor.fetchall()][0]
-                if(location == locationDD.get()):
-                    cursor.execute(f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{quantityinput.get()}', Units='{unitsInput.get()}', Location='{locationDD.get()}', fb_id='{currentfb_id}' where fd_ID='{int(food_id)}'")
+                if (location == locationDD.get()):
+                    cursor.execute(
+                        f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{quantityinput.get()}', Units='{unitsInput.get()}', Location='{locationDD.get()}', fb_id='{currentfb_id}' where fd_ID='{int(food_id)}'")
                 else:
                     cursor.execute(f"select fi.Quantity from food_item fi where fi.fd_id = '{food_id}'")
                     origQuantity = [int(i[0]) for i in cursor.fetchall()][0]
-                    cursor.execute(f"select fi.fd_id from food_item fi join food_bank fb using (fb_id) where fb_id = '{fb_id}' and fi.Item_name = '{iteminput.get()}'")
+                    cursor.execute(
+                        f"select fi.fd_id from food_item fi join food_bank fb using (fb_id) where fb_id = '{fb_id}' and fi.Item_name = '{iteminput.get()}'")
                     newFoodID = [int(i[0]) for i in cursor.fetchall()][0]
                     cursor.execute(f"select fi.Quantity from food_item fi where fi.fd_id = '{newFoodID}'")
                     existingNewQuantity = [int(i[0]) for i in cursor.fetchall()][0]
                     newOrigQuantity = origQuantity - int(quantityinput.get())
 
                     cursor.execute(
-                    f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{newOrigQuantity}', Units='{unitsInput.get()}', Location='{location}', fb_id='{currentfb_id}' where fd_ID='{int(food_id)}'")
+                        f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{newOrigQuantity}', Units='{unitsInput.get()}', Location='{location}', fb_id='{currentfb_id}' where fd_ID='{int(food_id)}'")
                     cursor.execute(
-                    f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{existingNewQuantity + int(quantityinput.get())}', Units='{unitsInput.get()}', Location='{locationDD.get()}', fb_id='{fb_id}' where fd_ID='{int(newFoodID)}'")
+                        f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{existingNewQuantity + int(quantityinput.get())}', Units='{unitsInput.get()}', Location='{locationDD.get()}', fb_id='{fb_id}' where fd_ID='{int(newFoodID)}'")
                 connection.commit()
 
-        submitButton = Button(screen, text="Save changes", height=2, width=10, command=saveChanges)
+        submitButton = ttk.Button(screen, text="Save changes", width=10, command=saveChanges)
         submitButton.place(x=400, y=150)
-        
-
-
 
 
 def connectToDatabase(user, password, host, port, database):
@@ -124,7 +150,7 @@ def connectToDatabase(user, password, host, port, database):
                 passwd=password,
                 port=port,
                 database=database)
-            #print("Connected")
+            # print("Connected")
         except:
             print("Connection failed")
             dbconnect = None
@@ -132,8 +158,8 @@ def connectToDatabase(user, password, host, port, database):
     return dbconnect
 
 
-#connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3624, "foodforyou")
-connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
+connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3624, "foodforyou")
+# connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
 cursor = connection.cursor()
 
 
@@ -141,11 +167,13 @@ class StaffGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Staff")
-        self.root.geometry("877x500")
+        self.screenWidth = 900
+        self.root.geometry(f'{self.screenWidth}x540')
         self.foodItemSearchText = StringVar()
         self.ascSort = BooleanVar()
         self.loc_to_update = StringVar()
         self.locations = fetchLocations()
+
         try:
             self.bg = PhotoImage(file="img\\backgroundimg.png")
             Label(root, image=self.bg, borderwidth=0, highlightthickness=0).place(x=0, y=0)
@@ -153,30 +181,20 @@ class StaffGUI:
             self.trailing_img = PhotoImage(file="img\\trailingIMG.png")
             for i in range(0, self.screenWidth, self.trailing_img.width()):
                 Label(root, image=self.trailing_img, bg='white').place(x=i, y=480)
-        except:
-            pass
+        except Exception as e:
+            print(e)
 
         root.configure(background='white')
+
+        global font
 
         style = ttk.Style(root)
         style.theme_create("Custom")
         # style.wm_attributes('-transparentcolor', '#ab23ff')
-        style.configure("TLabel", font=("arial", 11), background="#fff")
-        style.configure("TButton", font=("arial", 11), background="#fff")
-        style.configure("TCheckbutton", font=("arial", 11), background="#fff")
-        style.configure("TEntry", font=("arial", 11))
-
-        #
-        # style.theme_settings("Custom", {
-        #     "TButton":{
-        #         "fieldbackground": [("!disabled", "#5C5C5C")]
-        #
-        #     },
-        #     "TLabel":{
-        #         "fieldbackground": [("active", "#90fc03")]
-        #     }
-        #
-        # })
+        style.configure("TLabel", font=(font, 11), background="#fff")
+        style.configure("TButton", font=(font, 11), background="#fff")
+        style.configure("TCheckbutton", font=(font, 11), background="#fff")
+        style.configure("TEntry", font=(font, 11))
 
         def fetchData():
             search()
@@ -263,7 +281,7 @@ class StaffGUI:
         xScroll = Scrollbar(viewFrame, orient=HORIZONTAL)
         yScroll = Scrollbar(viewFrame, orient=VERTICAL)
         table = ttk.Treeview(viewFrame, columns=(
-        'item_to_filter', 'quantity_to_filter', 'units', 'fid_to_filter', 'location_to_filter'),
+            'item_to_filter', 'quantity_to_filter', 'units', 'fid_to_filter', 'location_to_filter'),
                              xscrollcommand=xScroll.set,
                              yscrollcommand=yScroll.set)
 
@@ -283,15 +301,15 @@ class StaffGUI:
         # get all values and pack the table on to the screen
 
         table.bind('<ButtonRelease-1>', update)
-        fetchData()
+#        fetchData()
         table.pack(fill=BOTH, expand=1)
 
 
-root = Tk()
-ob = StaffGUI(root)
-root.mainloop()
+# root = Tk()
+# ob = StaffGUI(root)
+# root.mainloop()
 
-#child = Tk()
-#UpdateItem(child, "apples", 1, "oz", "123 ferry street")
-#child.mainloop()
-#root.mainloop()
+child = Tk()
+UpdateItem(child, "apples", 1, "oz", "123 ferry street", 2)
+child.mainloop()
+# root.mainloop()
