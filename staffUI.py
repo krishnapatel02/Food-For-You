@@ -118,6 +118,7 @@ class NewItem:
             #         cursor.execute(
             #             f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{existingNewQuantity + int(quantityinput.get())}', Units='{unitsInput.get()}', Location='{locationDD.get()}', fb_id='{fb_id}' where fd_ID='{int(newFoodID)}'")
             #     connection.commit()
+
         submitButton = ttk.Button(self.screen, text="Save changes", width=15, command=saveChanges)
         submitButton.place(x=(self.swidth) / 2 - 60, y=250)
 
@@ -155,7 +156,9 @@ class UpdateItem:
         #ttk.Label(screen, text="quantity").grid(row=3,  column=0,  padx=10,  pady=5)
         ttk.Label(screen, text="quantity:").place(x=50, y=80)
         quantityinput = ttk.Entry(screen, width=10, textvariable=self.quantity_to_update, font=(font, searchInputSize))
-        quantityinput.insert(0, quantity)
+        #replace w this statement
+        self.quantity_to_update.set(quantity)
+        #quantityinput.insert(0, quantity)
         quantityinput.place(x=(self.swidth)/2-30, y=80)
         #quantityinput.grid(row=4,  column=0,  padx=10,  pady=5)
 
@@ -182,42 +185,65 @@ class UpdateItem:
         def saveChanges():
 
             # If one or more required field is empty, show error
-            if (iteminput.get() == "" or quantityinput.get() == "" or locationDD.get() == "" or unitsInput.get() == ""):
-                messagebox.showerror("ERROR", "Please enter the correct data in each catagory")
-            # otherwise update all categories
-            else:
-                """
-                con = mysql.connect(host="ix.cs.uoregon.edu", port=3673, user="prodrig2", password="irodmario@2001", database="422json")
-                custer.execute('UPDATE 422json.naturalsciences SET COURSE_NAME=%s, TERM=%s, INSTRUCTOR=%s, APREC=%s, BPREC=%s, CPREC=%s, DPREC=%s, FPREC=%s, faculty=%s where crn=%s',
-                (self.title.get(),self.term.get(), self.name.get(), self.A.get(), self.B.get(), self.C.get(), self.D.get(), self.F.get(), self.facultyType.get(), self.crn.get()))
-                con.commit()
-                con.close()
-                fetchData()
-                clear()
-                messagebox.showinfo('Success', f'Course CRN: {crn} is updated in the database')
-            """
-                cursor.execute(f"select fb.fb_id from food_bank fb where fb.Location = '{location}'")
-                currentfb_id = fb_id = [int(i[0]) for i in cursor.fetchall()][0]
-                cursor.execute(f"select fb.fb_id from food_bank fb where fb.Location = '{locationDD.get()}'")
-                fb_id = [int(i[0]) for i in cursor.fetchall()][0]
-                if (location == locationDD.get()):
-                    cursor.execute(
-                        f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{quantityinput.get()}', Units='{unitsInput.get()}', Location='{locationDD.get()}', fb_id='{currentfb_id}' where fd_ID='{int(food_id)}'")
-                else:
-                    cursor.execute(f"select fi.Quantity from food_item fi where fi.fd_id = '{food_id}'")
-                    origQuantity = [int(i[0]) for i in cursor.fetchall()][0]
-                    cursor.execute(
-                        f"select fi.fd_id from food_item fi join food_bank fb using (fb_id) where fb_id = '{fb_id}' and fi.Item_name = '{iteminput.get()}'")
-                    newFoodID = [int(i[0]) for i in cursor.fetchall()][0]
-                    cursor.execute(f"select fi.Quantity from food_item fi where fi.fd_id = '{newFoodID}'")
-                    existingNewQuantity = [int(i[0]) for i in cursor.fetchall()][0]
-                    newOrigQuantity = origQuantity - int(quantityinput.get())
+            operation = self.screenopt.get()
 
+            #if (iteminput.get() == "" or quantityinput.get() == "" or locationDD.get() == "" or unitsInput.get() == ""):
+            #    messagebox.showerror("ERROR", "Please enter the correct data in each catagory")
+            # otherwise update all categories
+            #else:
+            if(operation == 'update'):
+                if(int(quantityinput.get())<0):
+                    messagebox.showerror("ERROR", "Quantity must be non-negative")
+                else:
+                    cursor.execute(f"select fb.fb_id from food_bank fb where fb.Location = '{location}'")
+                    currentfb_id = fb_id = [int(i[0]) for i in cursor.fetchall()][0]
+                    #cursor.execute(f"select fb.fb_id from food_bank fb where fb.Location = '{locationDD.get()}'")
+                    #fb_id = [int(i[0]) for i in cursor.fetchall()][0]
                     cursor.execute(
-                        f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{newOrigQuantity}', Units='{unitsInput.get()}', Location='{location}', fb_id='{currentfb_id}' where fd_ID='{int(food_id)}'")
-                    cursor.execute(
-                        f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{existingNewQuantity + int(quantityinput.get())}', Units='{unitsInput.get()}', Location='{locationDD.get()}', fb_id='{fb_id}' where fd_ID='{int(newFoodID)}'")
+                        f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{quantityinput.get()}', Units='{unitsInput.get()}', Location='{location}', fb_id='{currentfb_id}' where fd_ID='{int(food_id)}'")
+                    connection.commit()
+
+            elif(operation == 'move'):
+                pass
+            elif(operation == 'delete'):
+                cursor.execute(f"delete from food_item where fd_id = {food_id}")
                 connection.commit()
+            
+
+            """
+            con = mysql.connect(host="ix.cs.uoregon.edu", port=3673, user="prodrig2", password="irodmario@2001", database="422json")
+            custer.execute('UPDATE 422json.naturalsciences SET COURSE_NAME=%s, TERM=%s, INSTRUCTOR=%s, APREC=%s, BPREC=%s, CPREC=%s, DPREC=%s, FPREC=%s, faculty=%s where crn=%s',
+            (self.title.get(),self.term.get(), self.name.get(), self.A.get(), self.B.get(), self.C.get(), self.D.get(), self.F.get(), self.facultyType.get(), self.crn.get()))
+            con.commit()
+            con.close()
+            fetchData()
+            clear()
+            messagebox.showinfo('Success', f'Course CRN: {crn} is updated in the database')
+        """
+           # cursor.execute(f"select fb.fb_id from food_bank fb where fb.Location = '{location}'")
+           # currentfb_id = fb_id = [int(i[0]) for i in cursor.fetchall()][0]
+           # cursor.execute(f"select fb.fb_id from food_bank fb where fb.Location = '{locationDD.get()}'")
+           # fb_id = [int(i[0]) for i in cursor.fetchall()][0]
+            
+            """
+            if (location == locationDD.get()):
+                cursor.execute(
+                    f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{quantityinput.get()}', Units='{unitsInput.get()}', Location='{locationDD.get()}', fb_id='{currentfb_id}' where fd_ID='{int(food_id)}'")
+            else:
+                cursor.execute(f"select fi.Quantity from food_item fi where fi.fd_id = '{food_id}'")
+                origQuantity = [int(i[0]) for i in cursor.fetchall()][0]
+                cursor.execute(
+                    f"select fi.fd_id from food_item fi join food_bank fb using (fb_id) where fb_id = '{fb_id}' and fi.Item_name = '{iteminput.get()}'")
+                newFoodID = [int(i[0]) for i in cursor.fetchall()][0]
+                cursor.execute(f"select fi.Quantity from food_item fi where fi.fd_id = '{newFoodID}'")
+                existingNewQuantity = [int(i[0]) for i in cursor.fetchall()][0]
+                newOrigQuantity = origQuantity - int(quantityinput.get())
+
+                cursor.execute(
+                    f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{newOrigQuantity}', Units='{unitsInput.get()}', Location='{location}', fb_id='{currentfb_id}' where fd_ID='{int(food_id)}'")
+                cursor.execute(
+                    f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{existingNewQuantity + int(quantityinput.get())}', Units='{unitsInput.get()}', Location='{locationDD.get()}', fb_id='{fb_id}' where fd_ID='{int(newFoodID)}'")
+            """
         submitButton = ttk.Button(screen, text="Save changes", width=15, command=saveChanges)
         submitButton.place(x=(self.swidth) / 2 - 60, y=250)
 
@@ -278,8 +304,8 @@ def connectToDatabase(user, password, host, port, database):
     return dbconnect
 
 
-connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3624, "foodforyou")
-# connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
+#connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3624, "foodforyou")
+connection = connectToDatabase("krishna", "pass", "127.0.0.1", 3306, "foodforyou")
 cursor = connection.cursor()
 
 
