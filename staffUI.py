@@ -1,4 +1,3 @@
-
 from tkinter import *
 from tkinter import ttk
 import mysql.connector
@@ -312,10 +311,10 @@ class StaffGUI:
         style = ttk.Style(root)
         style.theme_create("Custom")
         # style.wm_attributes('-transparentcolor', '#ab23ff')
-        style.configure("TLabel", font=(font, 11), background="#fff")
-        style.configure("TButton", font=(font, 11), background="#fff")
-        style.configure("TCheckbutton", font=(font, 11), background="#fff")
-        style.configure("TEntry", font=(font, 11))
+        style.configure("TLabel", font=f'{font} 11', background="#fff")
+        style.configure("TButton", font=f'{font} 11', background="#fff")
+        style.configure("TCheckbutton", font=f'{font} 11', background="#fff")
+        style.configure("TEntry", font=f'{font} 11')
 
         def fetchData():
             search()
