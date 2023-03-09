@@ -1,3 +1,4 @@
+
 from tkinter import *
 from tkinter import ttk
 import mysql.connector
@@ -24,8 +25,8 @@ def fetchCategory():
     return []
 
 class NewItem:
-    def __init__(self, addscreen):
-        self.screen = addscreen
+    def __init__(self, parent):
+        self.screen = Toplevel(parent)
         self.screen.title("New Item")
         self.swidth = 300
         self.screen.geometry(f'{self.swidth}x300')
@@ -41,15 +42,7 @@ class NewItem:
         global font
         global searchInputSize
 
-        self.screen.configure(background='#D3D3D3')
-
-        style = ttk.Style(self.screen)
-        style.configure("TLabel", font=(font, 11), background="#D3D3D3", disabledforeground="black")
-        style.map("TEntry", foreground=[('disabled', '#555555')])
-        style.configure('TButton', font=(font, 11), background="#D3D3D3")
-        style.map('TButton', background=[('!active', '#D3D3D3'), ('active', 'lightblue')])
-        style.configure("TCheckbutton", font=(font, 11), background="#D3D3D3")
-        style.configure("TDropdown", font=(font, 11), background="#D3D3D3")
+        self.screen.configure(background='white')
 
 
         #ttk.Label(screen, text="item").grid(row=1,  column=0,  padx=10,  pady=5)
@@ -133,8 +126,9 @@ class NewItem:
 
 
 class UpdateItem:
-    def __init__(self, screen, item, quantity, units, location, food_id):
-        self.screen = screen
+    def __init__(self, parent, item, quantity, units, location, food_id):
+        self.screen = Toplevel(parent)
+        screen = self.screen
         self.screen.title("Updating")
         self.swidth = 300
         self.screen.geometry(f'{self.swidth}x300')
@@ -149,16 +143,7 @@ class UpdateItem:
         global font
         global searchInputSize
 
-        screen.configure(background='#D3D3D3')
-
-        style = ttk.Style(screen)
-        style.configure("TLabel", font=(font, 11), background="#D3D3D3", disabledforeground="black")
-        style.map("TEntry", foreground=[('disabled', '#555555')])
-        style.configure('TButton', font=(font, 11), background="#D3D3D3")
-        style.map('TButton', background=[('!active', '#D3D3D3'), ('active', 'lightblue')])
-        style.configure("TCheckbutton", font=(font, 11), background="#D3D3D3")
-        style.configure("TDropdown", font=(font, 11), background="#D3D3D3")
-
+        screen.configure(background='white')
 
         #ttk.Label(screen, text="item").grid(row=1,  column=0,  padx=10,  pady=5)
         ttk.Label(screen, text="item").place(x=50, y=50)
@@ -389,8 +374,7 @@ class StaffGUI:
             food_id = row[3]
             location = row[4]
 
-            screen = Tk()
-            UpdateItem(screen, item, quantity, units, location, food_id)
+            UpdateItem(root, item, quantity, units, location, food_id)
 
         ttk.Label(root, text="Search by item").place(x=700, y=110)
 
@@ -417,8 +401,7 @@ class StaffGUI:
         SearchButton.place(x=700, y=400)
 
         def addItem():
-            screen = Tk()
-            NewItem(screen)
+            NewItem(root)
 
         addButton = ttk.Button(text="Add Item +", command=addItem)
         addButton.place(x=700, y=450)
@@ -464,4 +447,3 @@ root.mainloop()
 # child.mainloop()
 #
 
-#root.mainloop()
