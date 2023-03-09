@@ -3,6 +3,8 @@ from tkinter import ttk
 import mysql.connector
 from tkinter import messagebox
 
+# https://www.google.com/search?q=create+theme+tkinter+python&rlz=1C1VDKB_enUS1034US1034&sxsrf=AJOqlzVyUBHWRfGeC6eRK0zbFZLyOMlJmw%3A1678037292298&ei=LNEEZN7tEY660PEPkbOW6AE&ved=0ahUKEwjes-iFqMX9AhUOHTQIHZGZBR0Q4dUDCBA&uact=5&oq=create+theme+tkinter+python&gs_lcp=Cgxnd3Mtd2l6LXNlcnAQAzIICCEQoAEQwwQyCAghEKABEMMEOgoIABBHENYEELADOgcIIxCwAhAnOggIABAIEAcQHjoICAAQCBAeEA06BQgAEIYDOgoIIRCgARDDBBAKSgQIQRgAUNoDWMMJYO0KaAFwAXgAgAF3iAH5BJIBAzUuMpgBAKABAcgBCMABAQ&sclient=gws-wiz-serp#fpstate=ive&vld=cid:55497400,vid:fOVmMiyezMU
+
 connection = None
 cursor = None
 font = "arial"
@@ -22,7 +24,8 @@ class UpdateItem:
     def __init__(self, screen, item, quantity, units, location, food_id):
         self.screen = screen
         self.screen.title("Updating")
-        self.screen.geometry("500x200")
+        self.swidth = 300
+        self.screen.geometry(f'{self.swidth}x300')
         self.locations = fetchLocations()
 
         self.item_to_update = StringVar()
@@ -34,41 +37,51 @@ class UpdateItem:
         global font
         global searchInputSize
 
-        screen.configure(background='white')
+        screen.configure(background='#D3D3D3')
 
         style = ttk.Style(screen)
-        # style.theme_create("Custom")
-        # style.wm_attributes('-transparentcolor', '#ab23ff')
-        style.configure("TLabel", font=(font, 11), background="lightgray")
-        style.configure('TButton', font=(font, 11), background="lightblue")
-        style.map('TButton', background=[('!active', 'lightblue'), ('disabled', 'lightblue'), ('active', 'lightblue')])
-        style.configure("TCheckbutton", font=(font, 11), activebackground="pink", background="lightgray")
+        style.configure("TLabel", font=(font, 11), background="#D3D3D3", disabledforeground="black")
+        style.map("TEntry", foreground=[('disabled', '#555555')])
+        style.configure('TButton', font=(font, 11), background="#D3D3D3")
+        style.map('TButton', background=[('!active', '#D3D3D3'), ('active', 'lightblue')])
+        style.configure("TCheckbutton", font=(font, 11), background="#D3D3D3")
+        style.configure("TDropdown", font=(font, 11), background="#D3D3D3")
 
 
-        ttk.Label(screen, text="item").place(x=25, y=25)
-        iteminput = ttk.Entry(screen, width=10, textvariable=self.item_to_update, font=(font, searchInputSize), state="disabled")
+        #ttk.Label(screen, text="item").grid(row=1,  column=0,  padx=10,  pady=5)
+        ttk.Label(screen, text="item").place(x=50, y=50)
+        iteminput = ttk.Entry(screen, width=20, font=(font, searchInputSize))
         iteminput.insert(0, item)
-        #iteminput.grid(row=1, column=0, sticky='w', padx=10, pady=11)
-        iteminput.place(x=25, y=50)
+        iteminput.configure(state=DISABLED)
+        iteminput.place(x=(self.swidth)/2-30, y=50)
+        #iteminput.grid(row=2,  column=0,  padx=10,  pady=5)
 
-        ttk.Label(screen, text="quantity").place(x=125, y=25)
+        #ttk.Label(screen, text="quantity").grid(row=3,  column=0,  padx=10,  pady=5)
+        ttk.Label(screen, text="quantity:").place(x=50, y=80)
         quantityinput = ttk.Entry(screen, width=10, textvariable=self.quantity_to_update, font=(font, searchInputSize))
         quantityinput.insert(0, quantity)
-        #quantityinput.grid(row=1, column=0, sticky='w', padx=10, pady=11)
-        quantityinput.place(x=125, y=50)
+        quantityinput.place(x=(self.swidth)/2-30, y=80)
+        #quantityinput.grid(row=4,  column=0,  padx=10,  pady=5)
 
-        ttk.Label(screen, text="units").place(x=225, y=25)
+        #ttk.Label(screen, text="units").grid(row=3, column=1, padx=10, pady=5)
+        ttk.Label(screen, text="units: ").place(x=50, y=110)
         unitsInput = ttk.Entry(screen, width=10, textvariable=self.units_to_update, font=(font, searchInputSize))
         unitsInput.insert(0, units)
-        unitsInput.place(x=225, y=50)
+        #unitsInput.grid(row=4,  column=1,  padx=10,  pady=5)
+        unitsInput.place(x=(self.swidth)/2-30, y=110)
 
-        ttk.Label(screen, text="location").place(x=325, y=25)
-        ttk.Label(screen, text=location, font=(font, 9)).place(x=325, y=50)
+        ttk.Label(screen, text="location:").place(x=50, y=140)
+        quantityinput = ttk.Entry(screen, width=20, font=(font, searchInputSize))
+        quantityinput.insert(0, location)
+        quantityinput.place(x=(self.swidth) / 2 - 30, y=140)
+        quantityinput.configure(state=DISABLED)
+        # ttk.Label(screen, text=location, font=(font, 9)).place(x=(self.swidth)/2, y=300)
 
-        movelbl = ttk.Label(screen, text="location to move to")
+        fillerlbl = ttk.Label(screen)
+        movelbl = ttk.Label(screen, text="location to move items to")
 
         locationDD = ttk.Combobox(screen, values=self.locations, textvariable=self.loc_to_update,
-                                  font=(font, searchInputSize))
+                                  font=(font, 8))
         #locationDD.insert(0, location)
 
         def showScreen(a, b, c):
@@ -78,17 +91,21 @@ class UpdateItem:
                 #movelbl.destroy()
                 locationDD.pack_forget()
             else:
-                movelbl.pack(side=RIGHT)
+                fillerlbl.pack(side=BOTTOM, pady=25)
+
                 #movelbl.place(x=325, y=75)
-                locationDD.pack(side = RIGHT)
+                locationDD.pack(side = BOTTOM, pady=5)
+                movelbl.pack(side=BOTTOM)
                 #locationDD.place(x=325, y=100)
 
         self.screenopt.set("update")
         options = ["update", "move"]
         self.screenopt.trace('w', showScreen)
-        tabControl = OptionMenu(screen, self.screenopt, *options)
-        tabControl.pack()
+        tabControl = ttk.Combobox(screen, textvariable=self.screenopt, values=options, font=(font, 12), width =7)
 
+        #tabControl.grid(row=0,  column=0,  padx=10,  pady=5)
+        #tabControl.place(x=200, y=10)
+        tabControl.pack(pady=10)
         def saveChanges():
 
             # If one or more required field is empty, show error
@@ -130,8 +147,8 @@ class UpdateItem:
                         f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{existingNewQuantity + int(quantityinput.get())}', Units='{unitsInput.get()}', Location='{locationDD.get()}', fb_id='{fb_id}' where fd_ID='{int(newFoodID)}'")
                 connection.commit()
 
-        submitButton = ttk.Button(screen, text="Save changes", width=10, command=saveChanges)
-        submitButton.place(x=400, y=150)
+        submitButton = ttk.Button(screen, text="Save changes", width=15, command=saveChanges)
+        submitButton.place(x=(self.swidth)/2-60, y=250)
 
 
 def connectToDatabase(user, password, host, port, database):
@@ -254,21 +271,29 @@ class StaffGUI:
             screen = Tk()
             UpdateItem(screen, item, quantity, units, location, food_id)
 
-        ttk.Label(root, text="Search item").place(x=700, y=110)
+        ttk.Label(root, text="Search by item").place(x=700, y=110)
 
+        #searchframe = Frame(root, x=700, y=140)
         ItemSearch = ttk.Entry(root, width=25)
-        ItemSearch.place(x=700, y=140)
+        ItemSearch.place(x=700, y=135)
+
+        ttk.Label(root, text="Search by item ID").place(x=700, y=185)
+        IDSearch = ttk.Entry(root, width=25)
+        IDSearch.place(x=700, y=210)
+
+        #ItemSearch.grid(searchframe, row=0, column=0)
         SearchButton = ttk.Button(root, text="Search", width=15, command=fetchData)
         SearchButton.place(x=700, y=400)
 
         # ttk.Label(root, text="Sort quantity").place(x=700, y=50)
+
+        ttk.Label(root, text="Sort by location").place(x=700, y=260)
+        LocationFilter = ttk.Combobox(root, values=self.locations)
+        LocationFilter.place(x=700, y=285)
+
         QuantitySortButton = ttk.Checkbutton(root, text="Sort Ascending", width=15, command=fetchData, onvalue=True,
                                              offvalue=False, variable=self.ascSort)
-        QuantitySortButton.place(x=700, y=300)
-
-        ttk.Label(root, text="Sort by location").place(x=700, y=200)
-        LocationFilter = ttk.Combobox(root, values=self.locations)
-        LocationFilter.place(x=700, y=240)
+        QuantitySortButton.place(x=700, y=335)
 
         # UpdateItemButton = Button(text="Update Item", command=update)
         # UpdateItemButton.place(x=300, y=400)
@@ -299,15 +324,15 @@ class StaffGUI:
         # get all values and pack the table on to the screen
 
         table.bind('<ButtonRelease-1>', update)
-#        fetchData()
+        fetchData()
         table.pack(fill=BOTH, expand=1)
 
 
-# root = Tk()
-# ob = StaffGUI(root)
-# root.mainloop()
+root = Tk()
+ob = StaffGUI(root)
+root.mainloop()
 
-child = Tk()
-UpdateItem(child, "apples", 1, "oz", "123 ferry street", 2)
-child.mainloop()
+# child = Tk()
+# UpdateItem(child, "apples", 1, "oz", "123 ferry street", 2)
+# child.mainloop()
 # root.mainloop()
