@@ -2,30 +2,10 @@ from tkinter import *
 from tkinter import ttk
 import mysql.connector
 from tkinter import messagebox
-
-# https://www.google.com/search?q=create+theme+tkinter+python&rlz=1C1VDKB_enUS1034US1034&sxsrf=AJOqlzVyUBHWRfGeC6eRK0zbFZLyOMlJmw%3A1678037292298&ei=LNEEZN7tEY660PEPkbOW6AE&ved=0ahUKEwjes-iFqMX9AhUOHTQIHZGZBR0Q4dUDCBA&uact=5&oq=create+theme+tkinter+python&gs_lcp=Cgxnd3Mtd2l6LXNlcnAQAzIICCEQoAEQwwQyCAghEKABEMMEOgoIABBHENYEELADOgcIIxCwAhAnOggIABAIEAcQHjoICAAQCBAeEA06BQgAEIYDOgoIIRCgARDDBBAKSgQIQRgAUNoDWMMJYO0KaAFwAXgAgAF3iAH5BJIBAzUuMpgBAKABAcgBCMABAQ&sclient=gws-wiz-serp#fpstate=ive&vld=cid:55497400,vid:fOVmMiyezMU
+from utilffy import *
 
 connection = None
 cursor = None
-font = "Helvetica"
-searchInputSize =9
-
-def fetchLocations():
-    cursor.execute("SELECT fb.Location from food_bank fb order by fb.Location ASC")
-    locations = []
-    locations.append(None)
-    for row in cursor:
-        for col in row:
-            locations.append(col)
-    return locations
-
-def fetchCategory():
-    cursor.execute("SELECT DISTINCT fi.Category from food_item fi order by fi.Category ASC")
-    categories = []
-    for row in cursor:
-        for col in row:
-            categories.append(col)
-    return categories
 
 
 class NewItem:
@@ -34,8 +14,8 @@ class NewItem:
         self.screen.title("New Item")
         self.swidth = 300
         self.screen.geometry(f'{self.swidth}x300')
-        self.locations = fetchLocations()
-        self.categories = fetchCategory()
+        self.locations = fetchLocations(cursor)
+        self.categories = fetchCategory(cursor)
 
         self.item_to_update = StringVar()
         self.quantity_to_update = IntVar()
@@ -48,40 +28,29 @@ class NewItem:
 
         self.screen.configure(background='white')
 
+        ttk.Label(self.screen, text="New Item", font=(font, 13)).place(x=(self.swidth)/2 - 30, y=10)
 
-        #ttk.Label(screen, text="item").grid(row=1,  column=0,  padx=10,  pady=5)
         ttk.Label(self.screen, text="item").place(x=50, y=50)
         iteminput = ttk.Entry(self.screen, width=20, font=(font, searchInputSize))
-        iteminput.place(x=(self.swidth)/2-30, y=50)
-        #iteminput.grid(row=2,  column=0,  padx=10,  pady=5)
+        iteminput.place(x=(self.swidth) / 2 - 30, y=50)
 
-        #ttk.Label(screen, text="quantity").grid(row=3,  column=0,  padx=10,  pady=5)
-        ttk.Label(self.screen, text="quantity:").place(x=50, y=80)
-        quantityinput = ttk.Entry(self.screen, width=10, textvariable=self.quantity_to_update, font=(font, searchInputSize))
-        quantityinput.place(x=(self.swidth)/2-30, y=80)
-        #quantityinput.grid(row=4,  column=0,  padx=10,  pady=5)
+        ttk.Label(self.screen, text="category:").place(x=50, y=80)
+        categoryinput = ttk.Combobox(self.screen, values=self.categories,
+                                     font=(font, 8))
+        categoryinput.place(x=(self.swidth) / 2 - 30, y=80)
 
-        #ttk.Label(screen, text="units").grid(row=3, column=1, padx=10, pady=5)
-        ttk.Label(self.screen, text="units: ").place(x=50, y=110)
+        ttk.Label(self.screen, text="quantity:").place(x=50, y=110)
+        quantityinput = ttk.Entry(self.screen, width=10, textvariable=self.quantity_to_update,
+                                  font=(font, searchInputSize))
+        quantityinput.place(x=(self.swidth) / 2 - 30, y=110)
+
+        ttk.Label(self.screen, text="units: ").place(x=50, y=140)
         unitsInput = ttk.Entry(self.screen, width=10, textvariable=self.units_to_update, font=(font, searchInputSize))
-        #unitsInput.grid(row=4,  column=1,  padx=10,  pady=5)
-        unitsInput.place(x=(self.swidth)/2-30, y=110)
+        unitsInput.place(x=(self.swidth) / 2 - 30, y=140)
 
-        ttk.Label(self.screen, text="location:").place(x=50, y=140)
-        locationinput = ttk.Entry(self.screen, width=20, font=(font, searchInputSize))
-        locationinput.place(x=(self.swidth) / 2 - 30, y=140)
-        
-
-        ttk.Label(self.screen, text="category:").place(x=50, y=170)
-        categoryinput = ttk.Entry(self.screen, width=20, font=(font, searchInputSize))
-        categoryinput = ttk.Combobox(self.screen, values=self.categories, textvariable=self.loc_to_update,
-                                  font=(font, 8))
-        categoryinput.place(x=(self.swidth) / 2 - 30, y=170)
-        # ttk.Label(screen, text=location, font=(font, 9)).place(x=(self.swidth)/2, y=300)
-
-        fillerlbl = ttk.Label(self.screen)
-        movelbl = ttk.Label(self.screen, text="location to move items to")
-
+        ttk.Label(self.screen, text="location:").place(x=50, y=170)
+        locationinput = ttk.Combobox(self.screen, values=self.locations, font=(font, 8))
+        locationinput.place(x=(self.swidth) / 2 - 30, y=170)
 
         def saveChanges():
             item_name = iteminput.get()
@@ -91,27 +60,30 @@ class NewItem:
             category = categoryinput.get()
             cursor.execute(f"select fb.fb_ID from food_bank fb where fb.Location='{location}'")
             temp = cursor.fetchall()
-            if(category != "" and item_name != "" and units != ""  and quantity != "" and location != ""):
+            if (category != "" and item_name != "" and units != "" and quantity != "" and location != ""):
                 quantity = int(quantity)
-                if(quantity >= 0):
-                    if(temp!=[]):
+                if (quantity >= 0):
+                    if (temp != []):
                         print(temp)
                         fb_id = int(temp[0][0])
                         print(location)
-                        cursor.execute(f"select * from food_item fi where fi.Item_name = '{item_name}' and fi.units = '{units}' and fi.location = '{location}' and fi.fb_ID = {fb_id}")
+                        cursor.execute(
+                            f"select * from food_item fi where fi.Item_name = '{item_name}' and fi.units = '{units}' and fi.location = '{location}' and fi.fb_ID = {fb_id}")
                         result = cursor.fetchall()
-                        if(result == []):
+                        if (result == []):
                             cursor.execute(f"select MAX(fi.fd_ID) from food_item fi")
                             temp = cursor.fetchall()
                             key = 1
-                            if(temp != []):
-                                key = int(temp[0][0])+1
-                            cursor.execute(f"insert into foodforyou.food_item values ('{item_name}', '{category}', {quantity}, '{units}', '{location}', {int(fb_id)}, {key})")
+                            if (temp != []):
+                                key = int(temp[0][0]) + 1
+                            cursor.execute(
+                                f"insert into foodforyou.food_item values ('{item_name}', '{category}', {quantity}, '{units}', '{location}', {int(fb_id)}, {key})")
                             connection.commit()
                             messagebox.showinfo("Success", "Item added")
-                                
+
                         else:
-                            messagebox.showerror("ERROR", "This item appears to exist in the database, please find entry and modify.")
+                            messagebox.showerror("ERROR",
+                                                 "This item appears to exist in the database, please find entry and modify.")
                     else:
                         messagebox.showerror("ERROR", "Location is not valid, please pick valid location.")
                 else:
@@ -124,8 +96,6 @@ class NewItem:
         submitButton.place(x=(self.swidth) / 2 - 60, y=250)
 
 
-
-
 class UpdateItem:
     def __init__(self, parent, item, quantity, units, location, food_id):
         self.screen = Toplevel(parent)
@@ -133,7 +103,7 @@ class UpdateItem:
         self.screen.title("Updating")
         self.swidth = 300
         self.screen.geometry(f'{self.swidth}x300')
-        self.locations = fetchLocations()
+        self.locations = fetchLocations(cursor)
 
         self.item_to_update = StringVar()
         self.quantity_to_update = IntVar()
@@ -146,46 +116,42 @@ class UpdateItem:
 
         screen.configure(background='white')
 
-        #ttk.Label(screen, text="item").grid(row=1,  column=0,  padx=10,  pady=5)
+        #-------------------------------------------------- input widgets -----------------------------------------
         ttk.Label(screen, text="item").place(x=50, y=50)
         iteminput = ttk.Entry(screen, width=20, font=(font, searchInputSize))
         iteminput.insert(0, item)
         iteminput.configure(state=DISABLED)
-        iteminput.place(x=(self.swidth)/2-30, y=50)
-        #iteminput.grid(row=2,  column=0,  padx=10,  pady=5)
+        iteminput.place(x=(self.swidth) / 2 - 30, y=50)
 
-        #ttk.Label(screen, text="quantity").grid(row=3,  column=0,  padx=10,  pady=5)
         ttk.Label(screen, text="quantity:").place(x=50, y=80)
         quantityinput = ttk.Entry(screen, width=10, textvariable=self.quantity_to_update, font=(font, searchInputSize))
-        #replace w this statement
         self.quantity_to_update.set(quantity)
-        #quantityinput.insert(0, quantity)
-        quantityinput.place(x=(self.swidth)/2-30, y=80)
-        #quantityinput.grid(row=4,  column=0,  padx=10,  pady=5)
+        quantityinput.place(x=(self.swidth) / 2 - 30, y=80)
 
-        #ttk.Label(screen, text="units").grid(row=3, column=1, padx=10, pady=5)
         ttk.Label(screen, text="units: ").place(x=50, y=110)
         unitsInput = ttk.Entry(screen, width=10, textvariable=self.units_to_update, font=(font, searchInputSize))
-        unitsInput.insert(0, units)
-        #unitsInput.grid(row=4,  column=1,  padx=10,  pady=5)
-        unitsInput.place(x=(self.swidth)/2-30, y=110)
+        self.units_to_update.set(units)
+        unitsInput.place(x=(self.swidth) / 2 - 30, y=110)
 
         ttk.Label(screen, text="location:").place(x=50, y=140)
         locationinput = ttk.Entry(screen, width=20, font=(font, searchInputSize))
         locationinput.insert(0, location)
         locationinput.place(x=(self.swidth) / 2 - 30, y=140)
         locationinput.configure(state="disabled")
-        # ttk.Label(screen, text=location, font=(font, 9)).place(x=(self.swidth)/2, y=300)
 
         fillerlbl = ttk.Label(screen)
         movelbl = ttk.Label(screen, text="location to move items to")
 
         locationDD = ttk.Combobox(screen, values=self.locations, textvariable=self.loc_to_update,
                                   font=(font, 8))
+        submitButton = ttk.Button(screen, text="Save changes", width=15)
+        submitButton.place(x=(self.swidth) / 2 - 60, y=250)
+
+        # ------------------------------ modification functions -----------------------------------------------
         def compareItems(item1, item2):
             name = (item1[0] == item2[0])
-            category = (item1[1]==item2[1])
-            units = (item1[3]==item2[3])
+            category = (item1[1] == item2[1])
+            units = (item1[3] == item2[3])
             return (name and category and units)
 
         def saveChanges():
@@ -194,50 +160,55 @@ class UpdateItem:
             operation = self.screenopt.get()
             cursor.execute(f"select fb.fb_id from food_bank fb where fb.Location = '{location}'")
             fb_id = [int(i[0]) for i in cursor.fetchall()][0]
-            if(operation == 'update'):
-                if(int(quantityinput.get())<0):
+            if (operation == 'update'):
+                if (int(quantityinput.get()) < 0):
                     messagebox.showerror("ERROR", "Quantity must be non-negative")
                 else:
-                    #cursor.execute(f"select fb.fb_id from food_bank fb where fb.Location = '{location}'")
+                    # cursor.execute(f"select fb.fb_id from food_bank fb where fb.Location = '{location}'")
                     currentfb_id = fb_id
-                    cursor.execute(f"select * from food_item fi where fi.Item_name='{item}' and fi.fb_id={currentfb_id} and fi.units = '{units}'")
+                    cursor.execute(
+                        f"select * from food_item fi where fi.Item_name='{item}' and fi.fb_id={currentfb_id} and fi.units = '{units}'")
                     origEntry = cursor.fetchall()[0]
                     origQuantity = origEntry[2]
 
                     cursor.execute(
                         f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{quantityinput.get()}', Units='{unitsInput.get()}', Location='{location}', fb_id='{currentfb_id}' where fd_ID='{int(food_id)}'")
-                    if(int(quantityinput.get())<origQuantity):
-                        cursor.execute(f"select * from outgoing o where o.Item_name='{item}' and o.fb_ID={fb_id} and o.fd_ID={food_id}")
+                    if (int(quantityinput.get()) < origQuantity):
+                        cursor.execute(
+                            f"select * from outgoing o where o.Item_name='{item}' and o.fb_ID={fb_id} and o.fd_ID={food_id}")
                         outgoingEntry = cursor.fetchall()
-                        if(outgoingEntry != []):
-                            cursor.execute(f"update foodforyou.outgoing set Quantity={int(outgoingEntry[0][2]) + origQuantity - int(quantityinput.get())} where fd_ID='{int(food_id)}'")
+                        if (outgoingEntry != []):
+                            cursor.execute(
+                                f"update foodforyou.outgoing set Quantity={int(outgoingEntry[0][2]) + origQuantity - int(quantityinput.get())} where fd_ID='{int(food_id)}'")
                         else:
-                            cursor.execute(f"insert into foodforyou.outgoing (Item_name, Category, Quantity, Units, Location, fb_ID, fd_ID) values ('{item}', '{origEntry[1]}', {origQuantity - int(quantityinput.get())}, '{origEntry[3]}', '{origEntry[4]}', {int(origEntry[5])}, {int(origEntry[6])})")
+                            cursor.execute(
+                                f"insert into foodforyou.outgoing (Item_name, Category, Quantity, Units, Location, fb_ID, fd_ID) values ('{item}', '{origEntry[1]}', {origQuantity - int(quantityinput.get())}, '{origEntry[3]}', '{origEntry[4]}', {int(origEntry[5])}, {int(origEntry[6])})")
                     connection.commit()
                     messagebox.showinfo("Success", "Quantity successfully updated.")
 
-            elif(operation == 'move'):
+            elif (operation == 'move'):
                 cursor.execute(f"select fi.Quantity from food_item fi where fi.fd_id = '{food_id}'")
                 origQuantity = [int(i[0]) for i in cursor.fetchall()][0]
                 moveQuantity = int(quantityinput.get())
 
-                if(moveQuantity > origQuantity):
+                if (moveQuantity > origQuantity):
                     messagebox.showerror("ERROR", "The move quantity cannot be greater than the current quantity")
-                elif(moveQuantity < 0):
+                elif (moveQuantity < 0):
                     messagebox.showerror("ERROR", "The move quantity cannot be negative")
-                elif(locationDD.get()=="None" or locationDD.get()==""):
+                elif (locationDD.get() == "None" or locationDD.get() == ""):
                     messagebox.showerror("Operation Cancelled", "Move location was none.")
                 else:
                     cursor.execute(f"select fb.fb_id from food_bank fb where fb.Location = '{locationDD.get()}'")
                     movefb_id = [int(i[0]) for i in cursor.fetchall()][0]
-                    cursor.execute(f"select * from food_item fi where fi.Item_name='{item}' and fi.units = '{units}' and fi.fb_id={movefb_id}")
+                    cursor.execute(
+                        f"select * from food_item fi where fi.Item_name='{item}' and fi.units = '{units}' and fi.fb_id={movefb_id}")
                     a = cursor.fetchall()
-                    #print(a)
+                    # print(a)
                     item2 = a[0]
-                    if(item2!=[]):
+                    if (item2 != []):
                         cursor.execute(f"select * from food_item fi where fi.Item_name='{item}' and fi.fb_id={fb_id}")
                         item1 = cursor.fetchall()[0]
-                        if(compareItems(item1, item2)):
+                        if (compareItems(item1, item2)):
                             cursor.execute(
                                 f"select fi.fd_id from food_item fi join food_bank fb using (fb_id) where fb_id = '{movefb_id}' and fi.Item_name = '{iteminput.get()}'")
                             newFoodID = [int(i[0]) for i in cursor.fetchall()][0]
@@ -262,19 +233,15 @@ class UpdateItem:
                             messagebox.showerror("ERROR", "The items are not the same. Check quantity and category.")
                     else:
                         messagebox.showerror("ERROR", "Item to move to does not exist, please add the item.")
-            elif(operation == 'delete'):
+            elif (operation == 'delete'):
                 cursor.execute(f"delete from food_item where fd_id = {food_id}")
                 connection.commit()
                 messagebox.showinfo("Success", "Item successfully removed.")
             fetchData()
             screen.destroy()
-           
-        submitButton = ttk.Button(screen, text="Save changes", width=15, command=saveChanges)
-        submitButton.place(x=(self.swidth) / 2 - 60, y=250)
-
 
         def showScreen(a, b, c):
-            #FOR DB
+            # FOR DB
             s = self.screenopt.get()
             quantityinput.configure(state="active")
             unitsInput.configure(state="active")
@@ -292,81 +259,52 @@ class UpdateItem:
             else:
                 unitsInput.configure(state="disabled")
                 fillerlbl.pack(side=BOTTOM, pady=25)
-                #movelbl.place(x=325, y=75)
-                locationDD.pack(side = BOTTOM, pady=5)
+                locationDD.pack(side=BOTTOM, pady=5)
                 movelbl.pack(side=BOTTOM)
-                #locationDD.place(x=325, y=100)
 
         self.screenopt.set("update")
         options = ["update", "move", "delete"]
         self.screenopt.trace('w', showScreen)
-        tabControl = ttk.Combobox(screen, textvariable=self.screenopt, values=options, font=(font, 12), width =7)
-
-        #tabControl.grid(row=0,  column=0,  padx=10,  pady=5)
-        #tabControl.place(x=200, y=10)
+        tabControl = ttk.Combobox(screen, textvariable=self.screenopt, values=options, font=(font, 12), width=7)
         tabControl.pack(pady=10)
 
-
-def connectToDatabase(user, password, host, port, database):
-    dbconnect = None
-    counter = 0
-    while dbconnect is None:
-        if (counter >= 10):
-            print("Check connection to internet")
-            exit()
-        try:
-            dbconnect = mysql.connector.connect(
-                host=host,
-                user=user,
-                passwd=password,
-                port=port,
-                database=database)
-            # print("Connected")
-        except:
-            print("Connection failed")
-            dbconnect = None
-            counter += 1
-    return dbconnect
+        submitButton.configure(command=saveChanges)
 
 
-#connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3624, "foodforyou")
-connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
+
+connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
+#connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
 cursor = connection.cursor()
 
 
 class StaffGUI:
-    def __init__(self, root):
-        self.root = root
+    def __init__(self):
+        self.root = Tk()
+        root = self.root
         self.root.title("Staff")
         self.screenWidth = 900
         self.root.geometry(f'{self.screenWidth}x540')
         self.foodItemSearchText = StringVar()
         self.ascSort = BooleanVar()
         self.loc_to_update = StringVar()
-        self.locations = fetchLocations()
+        self.locations = fetchLocations(cursor)
+        use_theme(root)
+        #-----------------------------setting up background---------------------------------------
         global fetchData
         try:
             self.bg = PhotoImage(file="img/backgroundimg.png")
-            Label(root, image=self.bg, borderwidth=0, highlightthickness=0).place(x=0, y=0)
+            Label(master=root, image=self.bg, borderwidth=0, highlightthickness=0).place(x=0, y=0)
 
             self.trailing_img = PhotoImage(file="img/trailingIMG.png")
             for i in range(0, self.screenWidth, self.trailing_img.width()):
-                Label(root, image=self.trailing_img, bg='white').place(x=i, y=480)
+                Label(master=root, image=self.trailing_img, bg='white').place(x=i, y=480)
         except Exception as e:
             print(e)
 
         root.configure(background='white')
 
-        global font
 
-        style = ttk.Style(root)
-        style.theme_create("Custom")
-        # style.wm_attributes('-transparentcolor', '#ab23ff')
-        style.configure("TLabel", font=f'{font} 11', background="#fff")
-        style.configure("TButton", font=f'{font} 11', background="#fff")
-        style.configure("TCheckbutton", font=f'{font} 11', background="#fff")
-        style.configure("TEntry", font=f'{font} 11')
-
+        #-------------------------- item modification functions ---------------------------------------------
         def fetchData():
             search()
             rows = cursor.fetchall()
@@ -426,41 +364,38 @@ class StaffGUI:
 
             UpdateItem(root, item, quantity, units, location, food_id)
 
-        ttk.Label(root, text="Search by item").place(x=700, y=110)
-
-        #searchframe = Frame(root, x=700, y=140)
-        ItemSearch = ttk.Entry(root, width=25)
-        ItemSearch.place(x=700, y=135)
-
-        ttk.Label(root, text="Search by item ID").place(x=700, y=185)
-        IDSearch = ttk.Entry(root, width=25)
-        IDSearch.place(x=700, y=210)
-
-        #ItemSearch.grid(searchframe, row=0, column=0)
-        # ttk.Label(root, text="Sort quantity").place(x=700, y=50)
-
-        ttk.Label(root, text="Sort by location").place(x=700, y=260)
-        LocationFilter = ttk.Combobox(root, values=self.locations)
-        LocationFilter.place(x=700, y=285)
-
-        QuantitySortButton = ttk.Checkbutton(root, text="Sort Ascending", width=15, command=fetchData, onvalue=True,
-                                             offvalue=False, variable=self.ascSort)
-        QuantitySortButton.place(x=700, y=335)
-
-        SearchButton = ttk.Button(root, text="Search", width=15, command=fetchData)
-        SearchButton.place(x=700, y=400)
-
         def addItem():
             NewItem(root)
 
-        addButton = ttk.Button(text="Add Item +", command=addItem)
-        addButton.place(x=700, y=450)
+
+        #--------------------------------------- search widgets -------------------------------------
+        ttk.Label(root, text="Search by item").place(x=675, y=110)
+
+        ItemSearch = ttk.Entry(root, width=25)
+        ItemSearch.place(x=675, y=130)
+
+        ttk.Label(root, text="Search by item ID").place(x=675, y=170)
+        IDSearch = ttk.Entry(root, width=25)
+        IDSearch.place(x=675, y=190)
+
+        ttk.Label(root, text="Sort by location").place(x=675, y=230)
+        LocationFilter = ttk.Combobox(root, values=self.locations)
+        LocationFilter.place(x=675, y=250)
+
+        QuantitySortButton = ttk.Checkbutton(root, text="Sort Ascending", width=15, command=fetchData, onvalue=True,
+                                             offvalue=False, variable=self.ascSort)
+        QuantitySortButton.place(x=675, y=300)
+
+        SearchButton = ttk.Button(root, text="Search", width=15, command=fetchData)
+        SearchButton.place(x=675, y=350)
+
+        addButton = ttk.Button(text="New Item +", command=addItem, width=15)
+        addButton.place(x=675, y=410)
 
 
-
+        #------------------------------------ table ---------------------------------------------------
         viewFrame = Frame(root, bd=5, relief='ridge', bg='wheat')
         viewFrame.place(x=30, y=110, width=600, height=350)
-        # 800
         xScroll = Scrollbar(viewFrame, orient=HORIZONTAL)
         yScroll = Scrollbar(viewFrame, orient=VERTICAL)
         table = ttk.Treeview(viewFrame, columns=(
@@ -471,7 +406,7 @@ class StaffGUI:
         table.heading("item_to_filter", text="item")
         table.heading("quantity_to_filter", text="quantity")
         table.heading("units", text="units")
-        table.heading("fid_to_filter", text="food_id")
+        table.heading("fid_to_filter", text="food id")
         table.heading("location_to_filter", text="locations")
 
         table.column("item_to_filter", width=100)
@@ -482,17 +417,17 @@ class StaffGUI:
         table['show'] = 'headings'
 
         # get all values and pack the table on to the screen
-
         table.bind('<ButtonRelease-1>', update)
         fetchData()
         table.pack(fill=BOTH, expand=1)
+        root.mainloop()
 
 
-root = Tk()
-ob = StaffGUI(root)
-root.mainloop()
+StaffGUI()
+
 
 # child = Tk()
 # UpdateItem(child, "apples", 1, "oz", "123 ferry street", 2)
 # child.mainloop()
 #
+
