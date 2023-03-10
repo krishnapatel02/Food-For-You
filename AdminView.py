@@ -3,6 +3,8 @@ from tkinter import ttk
 from tkinter import filedialog
 import tkinter.messagebox as messagebox
 import timepicker as time
+import csv
+import os
 from util import *
 
 """
@@ -15,9 +17,13 @@ allow times to be none (store is closed)
 verify that all times are times are inputted before submit
 """
 
-connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3624, "foodforyou")
+FBconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3624, "foodforyou")
 # connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
-cursor = connection.cursor()
+FBcursor = FBconnection.cursor()
+
+Dconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3624, "foodforyou")
+# connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
+Dcursor = Dconnection.cursor()
 
 class FBView:
     def __init__(self):
@@ -26,13 +32,13 @@ class FBView:
         self.foodItemSearchText = StringVar()
         self.ascSort = BooleanVar()
         self.loc_to_update = StringVar()
-        self.locations = fetchLocations(cursor)
+        self.locations = fetchLocations(FBcursor)
 
         global font
 
         def fetchData():
             search()
-            rows = cursor.fetchall()
+            rows = FBcursor.fetchall()
 
             # Delete the old table and insert each row in the current database to accomplish refresh
             if rows != 0:
@@ -156,7 +162,7 @@ class FBView:
                                      "Having trouble uploading file. Please ensure the file uploaded is a CSV with two columns of 'item' and 'quantity'")
 
         def fileUpload():
-            filepath = t.filedialog.askopenfilename()
+            filepath = filedialog.askopenfilename()
             filename, fextension = os.path.splitext(filepath)
 
             if fextension != '.csv':
@@ -266,7 +272,7 @@ class DataView:
         self.foodItemSearchText = StringVar()
         self.ascSort = BooleanVar()
         self.loc_to_update = StringVar()
-        self.locations = fetchLocations(cursor)
+        self.locations = fetchLocations(Dcursor)
 
         try:
             self.bg = PhotoImage(file="img/backgroundimg.png")
@@ -283,7 +289,7 @@ class DataView:
 
         def fetchData():
             search()
-            rows = cursor.fetchall()
+            rows = Dcursor.fetchall()
 
             # Delete the old table and insert each row in the current database to accomplish refresh
             if rows != 0:
@@ -303,28 +309,28 @@ class DataView:
             if (item.strip() == ""):
                 itemBool = False
             if (locationBool and itemBool and ascending):
-                cursor.execute(
+                Dcursor.execute(
                     f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}' and fb.location = '{location}' order by fi.Quantity ASC")
             elif (locationBool and ascending):
-                cursor.execute(
+                Dcursor.execute(
                     f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fb.location = '{location}' order by fi.Quantity ASC")
             elif (itemBool and ascending):
-                cursor.execute(
+                Dcursor.execute(
                     f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}' order by fi.Quantity ASC")
             elif (itemBool and locationBool):
-                cursor.execute(
+                Dcursor.execute(
                     f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}' and fb.location = '{location}'")
             elif (itemBool):
-                cursor.execute(
+                Dcursor.execute(
                     f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}'")
             elif (locationBool):
-                cursor.execute(
+                Dcursor.execute(
                     f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fb.location = '{location}'")
             elif (ascending):
-                cursor.execute(
+                Dcursor.execute(
                     f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) order by fi.quantity ASC")
             else:
-                cursor.execute(
+                Dcursor.execute(
                     f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id)")
 
         def update(e):
