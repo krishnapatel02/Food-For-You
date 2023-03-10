@@ -20,8 +20,13 @@ def fetchLocations():
     return locations
 
 def fetchCategory():
-    #TODO
-    return []
+    cursor.execute("SELECT DISTINCT fi.Category from food_item fi order by fi.Category ASC")
+    categories = []
+    for row in cursor:
+        for col in row:
+            categories.append(col)
+    return categories
+
 
 class NewItem:
     def __init__(self, parent):
@@ -65,6 +70,7 @@ class NewItem:
         ttk.Label(self.screen, text="location:").place(x=50, y=140)
         locationinput = ttk.Entry(self.screen, width=20, font=(font, searchInputSize))
         locationinput.place(x=(self.swidth) / 2 - 30, y=140)
+        
 
         ttk.Label(self.screen, text="category:").place(x=50, y=170)
         categoryinput = ttk.Entry(self.screen, width=20, font=(font, searchInputSize))
@@ -78,9 +84,41 @@ class NewItem:
 
 
         def saveChanges():
-            # TODO
-            pass
-           
+            item_name = iteminput.get()
+            quantity = (quantityinput.get())
+            location = locationinput.get()
+            units = unitsInput.get()
+            category = categoryinput.get()
+            cursor.execute(f"select fb.fb_ID from food_bank fb where fb.Location='{location}'")
+            temp = cursor.fetchall()
+            if(category != "" and item_name != "" and units != ""  and quantity != "" and location != ""):
+                quantity = int(quantity)
+                if(quantity >= 0):
+                    if(temp!=[]):
+                        print(temp)
+                        fb_id = int(temp[0][0])
+                        print(location)
+                        cursor.execute(f"select * from food_item fi where fi.Item_name = '{item_name}' and fi.units = '{units}' and fi.location = '{location}' and fi.fb_ID = {fb_id}")
+                        result = cursor.fetchall()
+                        if(result == []):
+                            cursor.execute(f"select MAX(fi.fd_ID) from food_item fi")
+                            temp = cursor.fetchall()
+                            key = 1
+                            if(temp != []):
+                                key = int(temp[0][0])+1
+                            cursor.execute(f"insert into foodforyou.food_item values ('{item_name}', '{category}', {quantity}, '{units}', '{location}', {int(fb_id)}, {key})")
+                            connection.commit()
+                            messagebox.showinfo("Success", "Item added")
+                                
+                        else:
+                            messagebox.showerror("ERROR", "This item appears to exist in the database, please find entry and modify.")
+                    else:
+                        messagebox.showerror("ERROR", "Location is not valid, please pick valid location.")
+                else:
+                    messagebox.showerror("ERROR", "Enter a non-negative quantity.")
+            else:
+                messagebox.showerror("ERROR", "Please enter all fields to insert an item.")
+            self.screen.destroy()
 
         submitButton = ttk.Button(self.screen, text="Save changes", width=15, command=saveChanges)
         submitButton.place(x=(self.swidth) / 2 - 60, y=250)
@@ -291,8 +329,8 @@ def connectToDatabase(user, password, host, port, database):
     return dbconnect
 
 
-connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3624, "foodforyou")
-#connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
+#connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3624, "foodforyou")
+connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
 cursor = connection.cursor()
 
 
