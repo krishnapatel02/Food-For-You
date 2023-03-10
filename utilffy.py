@@ -1,18 +1,21 @@
-import mysql.connector
+from tkinter import *
 from tkinter import ttk
+import mysql.connector
+from tkinter import messagebox
 
 font = "Helvetica"
 searchInputSize = "9"
-regFontSize = "12"
+regFontSize = "11"
 
-style = ttk.Style()
-style.theme_create("Custom")
-# style.wm_attributes('-transparentcolor', '#ab23ff')
-style.configure("TLabel", font=f'{font} {regFontSize}', background="#fff")
-style.configure("TButton", font=f'{font} {regFontSize}', background="#fff")
-style.configure("TCheckbutton", font=f'{font} {regFontSize}', background="#fff")
-style.configure("TEntry", font=f'{font} {regFontSize}')
-style.configure("Spinbox")
+def use_theme(window):
+    style = ttk.Style(window)
+    style.theme_create("Custom")
+    # style.wm_attributes('-transparentcolor', '#ab23ff')
+    style.configure("TLabel", font=f'{font} {regFontSize}', background="#fff")
+    style.configure("TButton", font=f'{font} {regFontSize}', background="#fff")
+    style.configure("TCheckbutton", font=f'{font} {regFontSize}', background="#fff")
+    style.configure("TEntry", font=f'{font} {regFontSize}')
+    style.configure("TSpinbox", font=f'{font} {regFontSize}')
 
 def fetchLocations(cursor):
     cursor.execute("SELECT fb.Location from food_bank fb order by fb.Location ASC")
@@ -23,9 +26,13 @@ def fetchLocations(cursor):
             locations.append(col)
     return locations
 
-def fetchCategory():
-    #TODO
-    return []
+def fetchCategory(cursor):
+    cursor.execute("SELECT DISTINCT fi.Category from food_item fi order by fi.Category ASC")
+    categories = []
+    for row in cursor:
+        for col in row:
+            categories.append(col)
+    return categories
 
 def connectToDatabase(user, password, host, port, database):
 
