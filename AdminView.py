@@ -5,7 +5,7 @@ import tkinter.messagebox as messagebox
 import timepicker as time
 import csv
 import os
-from util import *
+from utilffy import *
 
 """
 README!!!!!!!!!
@@ -17,11 +17,11 @@ allow times to be none (store is closed)
 verify that all times are times are inputted before submit
 """
 
-FBconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3624, "foodforyou")
+FBconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
 # connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
 FBcursor = FBconnection.cursor()
 
-Dconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3624, "foodforyou")
+Dconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
 # connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
 Dcursor = Dconnection.cursor()
 
@@ -203,23 +203,25 @@ class FBView:
             newFBScreen.destroy()
 
         newFBScreen = Tk()
-        newFBScreen.geometry("800x400")
-        newFBScreen.configure(background='white')
+        newFBScreen.geometry("800x300")
 
-
-        locationInput = ttk.Entry(newFBScreen, width=10)
+        locationInput = ttk.Entry(newFBScreen, width=20)
         locationInput.place(x=75, y=200)
 
-        fileUploadButton = ttk.Button(newFBScreen, text="Upload Data", width=10, command=fileUpload)
-        fileUploadButton.place(x=400, y=150)
+        FBNameInput = ttk.Entry(newFBScreen, width=20)
+        FBNameInput.place(x=225, y=200)
 
-        submitButton = ttk.Button(newFBScreen, text="Save changes", width=10, command=saveChanges)
-        submitButton.place(x=675, y=200)
+        fileUploadButton = ttk.Button(newFBScreen, text="Upload Data", width=15, command=fileUpload)
+        fileUploadButton.place(x=400, y=200)
+
+        submitButton = ttk.Button(newFBScreen, text="Save changes", width=15, command=saveChanges)
+        submitButton.place(x=600, y=200)
 
         ttk.Label(newFBScreen, text="Insert times").place(x=75, y=25)
         ttk.Label(newFBScreen, text="Open").place(x=25, y=75)
         ttk.Label(newFBScreen, text="Close").place(x=25, y=100)
-        ttk.Label(newFBScreen, text="Insert Location").place(x=75, y=150)
+        ttk.Label(newFBScreen, text="Insert Location").place(x=75, y=175)
+        ttk.Label(newFBScreen, text="Insert Food Bank Name").place(x=225, y=175)
 
         ttk.Label(newFBScreen, text="Monday").place(x=75, y=50)
         MtimeOpen = time.App(newFBScreen)
@@ -336,6 +338,8 @@ class DataView:
             location = row[4]
 
             #UpdateItem(self.root, item, quantity, units, location, food_id)
+        def export():
+            pass
 
         ttk.Label(root, text="Search by item").place(x=700, y=110)
 
@@ -360,6 +364,9 @@ class DataView:
 
         SearchButton = ttk.Button(root, text="Search", width=15, command=fetchData)
         SearchButton.place(x=700, y=400)
+
+        exportButton = ttk.Button(root, text="Export data", width=15, command=export)
+        exportButton.place(x=700, y=50)
 
         viewFrame = Frame(root, bd=5, relief='ridge', bg='wheat')
         viewFrame.place(x=30, y=110, width=600, height=350)
