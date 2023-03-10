@@ -181,6 +181,11 @@ class UpdateItem:
 
         locationDD = ttk.Combobox(screen, values=self.locations, textvariable=self.loc_to_update,
                                   font=(font, 8))
+        def compareItems(item1, item2):
+            name = (item1[0] == item2[0])
+            category = (item1[1]==item2[1])
+            units = (item1[3]==item2[3])
+            return (name and category and units)
 
         def saveChanges():
 
@@ -191,12 +196,14 @@ class UpdateItem:
             #    messagebox.showerror("ERROR", "Please enter the correct data in each catagory")
             # otherwise update all categories
             #else:
+            cursor.execute(f"select fb.fb_id from food_bank fb where fb.Location = '{location}'")
+            fb_id = [int(i[0]) for i in cursor.fetchall()][0]
             if(operation == 'update'):
                 if(int(quantityinput.get())<0):
                     messagebox.showerror("ERROR", "Quantity must be non-negative")
                 else:
                     cursor.execute(f"select fb.fb_id from food_bank fb where fb.Location = '{location}'")
-                    currentfb_id = fb_id = [int(i[0]) for i in cursor.fetchall()][0]
+                    currentfb_id = fb_id
                     #cursor.execute(f"select fb.fb_id from food_bank fb where fb.Location = '{locationDD.get()}'")
                     #fb_id = [int(i[0]) for i in cursor.fetchall()][0]
                     cursor.execute(
@@ -204,11 +211,54 @@ class UpdateItem:
                     connection.commit()
 
             elif(operation == 'move'):
-                pass
+                cursor.execute(f"select fi.Quantity from food_item fi where fi.fd_id = '{food_id}'")
+                origQuantity = [int(i[0]) for i in cursor.fetchall()][0]
+                moveQuantity = int(quantityinput.get())
+
+                if(moveQuantity > origQuantity):
+                    messagebox.showerror("ERROR", "The move quantity cannot be greater than the current quantity")
+                elif(moveQuantity < 0):
+                    messagebox.showerror("ERROR", "The move quantity cannot be negative")
+                elif(locationDD.get()=="None" or locationDD.get()==""):
+                    messagebox.showerror("Operation Cancelled", "Move location was none.")
+                else:
+                    cursor.execute(f"select fb.fb_id from food_bank fb where fb.Location = '{locationDD.get()}'")
+                    movefb_id = [int(i[0]) for i in cursor.fetchall()][0]
+                    cursor.execute(f"select * from food_item fi where fi.Item_name='{item}' and fi.units = '{units}' and fi.fb_id={movefb_id}")
+                    a = cursor.fetchall()
+                    print(a)
+                    item2 = a[0]
+                    if(item2!=[]):
+                        cursor.execute(f"select * from food_item fi where fi.Item_name='{item}' and fi.fb_id={fb_id}")
+                        item1 = cursor.fetchall()[0]
+                        if(compareItems(item1, item2)):
+                            cursor.execute(
+                                f"select fi.fd_id from food_item fi join food_bank fb using (fb_id) where fb_id = '{movefb_id}' and fi.Item_name = '{iteminput.get()}'")
+                            newFoodID = [int(i[0]) for i in cursor.fetchall()][0]
+                            cursor.execute(f"select fi.Quantity from food_item fi where fi.fd_id = '{newFoodID}'")
+                            existingNewQuantity = [int(i[0]) for i in cursor.fetchall()][0]
+                            updateQuantity = moveQuantity + existingNewQuantity
+                            currentItemUpdateQuantity = origQuantity - moveQuantity
+                            print(currentItemUpdateQuantity)
+                            print(updateQuantity)
+
+                            cursor.execute(
+                                f"update foodforyou.food_item set Quantity='{currentItemUpdateQuantity}' where fd_ID='{int(food_id)}'")
+                            cursor.execute(
+                                f"update foodforyou.food_item set Quantity='{updateQuantity}' where fd_ID='{int(newFoodID)}'")
+
+                            connection.commit()
+
+
+
+                        else:
+                            messagebox.showerror("ERROR", "The items are not the same. Check quantity and category.")
+                    else:
+                        messagebox.showerror("ERROR", "Item to move to does not exist, please add the item.")
             elif(operation == 'delete'):
                 cursor.execute(f"delete from food_item where fd_id = {food_id}")
                 connection.commit()
-            
+                
 
             """
             con = mysql.connect(host="ix.cs.uoregon.edu", port=3673, user="prodrig2", password="irodmario@2001", database="422json")
