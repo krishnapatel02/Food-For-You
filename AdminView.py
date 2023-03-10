@@ -26,8 +26,8 @@ Dconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3624, 
 Dcursor = Dconnection.cursor()
 
 class FBView:
-    def __init__(self):
-        self.root = ttk.Frame(tabControl)
+    def __init__(self, parent):
+        self.root = ttk.Frame(parent)
         root = self.root
         self.foodItemSearchText = StringVar()
         self.ascSort = BooleanVar()
@@ -202,16 +202,18 @@ class FBView:
             # when finished up
             newFBScreen.destroy()
 
-        newFBScreen = ttk.Tk()
+        newFBScreen = Tk()
         newFBScreen.geometry("800x400")
+        newFBScreen.configure(background='white')
 
-        locationInput = ttk.Text(newFBScreen, height=2, width=10)
+
+        locationInput = ttk.Entry(newFBScreen, width=10)
         locationInput.place(x=75, y=200)
 
-        fileUploadButton = ttk.Button(newFBScreen, text="Upload Data", height=2, width=10, command=fileUpload)
+        fileUploadButton = ttk.Button(newFBScreen, text="Upload Data", width=10, command=fileUpload)
         fileUploadButton.place(x=400, y=150)
 
-        submitButton = ttk.Button(newFBScreen, text="Save changes", height=2, width=10, command=saveChanges)
+        submitButton = ttk.Button(newFBScreen, text="Save changes", width=10, command=saveChanges)
         submitButton.place(x=675, y=200)
 
         ttk.Label(newFBScreen, text="Insert times").place(x=75, y=25)
@@ -266,24 +268,13 @@ class FBView:
         newFBScreen.mainloop()
 
 class DataView:
-    def __init__(self):
-        self.root = ttk.Frame(tabControl)
+    def __init__(self, parent):
+        self.root = ttk.Frame(parent)
         root = self.root
         self.foodItemSearchText = StringVar()
         self.ascSort = BooleanVar()
         self.loc_to_update = StringVar()
         self.locations = fetchLocations(Dcursor)
-
-        try:
-            self.bg = PhotoImage(file="img/backgroundimg.png")
-            Label(root, image=self.bg, borderwidth=0, highlightthickness=0).place(x=0, y=0)
-
-            self.trailing_img = PhotoImage(file="img/trailingIMG.png")
-            for i in range(0, self.screenWidth, self.trailing_img.width()):
-                Label(root, image=self.trailing_img, bg='white').place(x=i, y=480)
-        except Exception as e:
-            print(e)
-
 
         global font
 
@@ -398,31 +389,37 @@ class DataView:
         table.bind('<ButtonRelease-1>', update)
         fetchData()
 
-
-
+# form = Tk()
+# tab_parent = ttk.Notebook(form)
+# tab1 = ttk.Frame(tab_parent)
+# tab2 = ttk.Frame(tab_parent)
+# tab_parent.add(tab1, text="All Records")
+# tab_parent.add(tab2, text="Add New Record")
+# tab_parent.pack(expand=1, fill='both')
 
 root = Tk()
 root.geometry('900x540')
 tabControl = ttk.Notebook(root)
 
-tab1 = FBView().root
+tab1 = FBView(root).root
 #tab1.place(x=0, y=0, width=900, height = 540)
 tabControl.add(tab1, text= "foodbanks")
 
-tab2 = DataView().root
+tab2 = DataView(root).root
 tabControl.add(tab2, text= "data")
 #tab2.place(x=0, y=0, width=900, height = 540)
 
 tabControl.pack(expand=1, fill="both")
 root.mainloop()
 
-try:
-    bg = PhotoImage(master=tab1, file="img/backgroundimg.png")
-
-    Label(root, image=bg, borderwidth=0, highlightthickness=0).place(x=0, y=0)
-
-    trailing_img = PhotoImage(master=root, file="img/trailingIMG.png")
-    for i in range(0, 900, trailing_img.width()):
-        Label(master=root, image=trailing_img, bg='white').place(x=i, y=480)
-except Exception as e:
-    print(e)
+#
+# try:
+#     bg = PhotoImage(master=tab1, file="img/backgroundimg.png")
+#
+#     Label(root, image=bg, borderwidth=0, highlightthickness=0).place(x=0, y=0)
+#
+#     trailing_img = PhotoImage(master=root, file="img/trailingIMG.png")
+#     for i in range(0, 900, trailing_img.width()):
+#         Label(master=root, image=trailing_img, bg='white').place(x=i, y=480)
+# except Exception as e:
+#     print(e)
