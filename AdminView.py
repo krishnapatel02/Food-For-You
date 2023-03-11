@@ -11,22 +11,23 @@ from utilffy import *
 README!!!!!!!!!
 for db: write saveChanges()
         view data on main screen
-
 for KS:
 allow times to be none (store is closed)
 verify that all times are times are inputted before submit
 """
 
 FBconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
-#FBconnection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
+# FBconnection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
 FBcursor = FBconnection.cursor()
 
 Dconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
-#Dconnection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
+# Dconnection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
 Dcursor = Dconnection.cursor()
+
 
 class FBView:
     def __init__(self, parent):
+        #----------------------setting up screen for "New Food Bank"---------
         self.root = Frame(parent, bg="white")
         root = self.root
         self.foodItemSearchText = StringVar()
@@ -36,6 +37,8 @@ class FBView:
 
         global font
         global fetchData
+
+
         def fetchData(newFBID):
             search(newFBID)
             rows = FBcursor.fetchall()
@@ -48,8 +51,8 @@ class FBView:
                     table.insert('', END, values=row)
 
         def search(newFBID):
-           FBcursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fb.fb_id = {newFBID}")
+            FBcursor.execute(
+                f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fb.fb_id = {newFBID}")
 
         def update(e):
             # taken from focus(e) by jerry
@@ -62,14 +65,16 @@ class FBView:
             food_id = row[3]
             location = row[4]
 
-            #UpdateItem(self.root, item, quantity, units, location, food_id)
+            # UpdateItem(self.root, item, quantity, units, location, food_id)
 
+        #================== user widgets =============================================================
         AddFBButton = ttk.Button(root, text="New Food Bank +", width=20, command=self.addFB)
         AddFBButton.place(x=675, y=200)
 
+
+        #================== view table =============================================================
         viewFrame = Frame(root, bd=5, relief='ridge', bg='wheat')
         viewFrame.place(x=30, y=110, width=600, height=350)
-        # 800
         xScroll = Scrollbar(viewFrame, orient=HORIZONTAL)
         yScroll = Scrollbar(viewFrame, orient=VERTICAL)
         table = ttk.Treeview(viewFrame, columns=(
@@ -93,22 +98,24 @@ class FBView:
         # get all values and pack the table on to the screen
 
         table.bind('<ButtonRelease-1>', update)
-        #fetchData()
+        # fetchData()
         table.pack(fill=BOTH, expand=1)
 
 
+    # Add new food bank screen
     def addFB(self):
-        # if succesfull return a dictionary of the csv
+        # if succesful return a dictionary of the csv
         def validateFile(filepath):
             # checking headers
             try:
                 file = open(filepath, 'r')
-                expected = ["item", "category", "quantity"]
+                expected = ["item", "category", "quantity", "units"] #columns of csv must match
 
-                dict_from_csv = list(csv.DictReader(file))
+
+                dict_from_csv = list(csv.DictReader(file))          #turn csv into dictionary
 
                 if expected != [x.strip() for x in dict_from_csv[0].keys()]:
-                    messagebox.showerror("File error", "Incorrect headers: expected 'item', 'category', 'quantity'")
+                    messagebox.showerror("File error", "Incorrect headers: expected 'item', 'category', 'quantity', 'units'")
                     return -1
 
                 for i, item in enumerate(dict_from_csv):
@@ -122,8 +129,8 @@ class FBView:
 
                 returnval = []
                 for x in dict_from_csv:
-                    i,c, q = x.values()
-                    returnval.append((i,c, q))
+                    i, c, q = x.values()
+                    returnval.append((i, c, q))
                 return returnval
 
             except Exception as e:
@@ -138,7 +145,7 @@ class FBView:
             if fextension != '.csv':
                 messagebox.showerror("Incorrect File Type. Must be CSV")
                 return
-            
+
             # check headers
             global data
             data = validateFile(filepath)
@@ -152,7 +159,6 @@ class FBView:
             #   (user can input times, location and upload files in any order
             #   so "save changes" does the commit)
 
-            
             newloc = locationInput.get()
             times = {"Monday": (MtimeOpen.getTime(), MtimeClose.getTime()),
                      "Tuesday": (TtimeOpen.getTime(), TtimeClose.getTime()),
@@ -163,26 +169,20 @@ class FBView:
                      "Sunday": (UtimeOpen.getTime(), UtimeClose.getTime())
                      }
 
-            print("data from csv: ", data)
-            print("newloc: ", newloc)
-            print("times: ", times)
             phone_number = "(541) 123-4567"
             neighborhood = "Bethel"
             FBName = FBNameInput.get()
             units = "lbs"
-            # TODO ---------------- db stuff (upload the dictionary to food items and location database) ------------------------
-            #   use the variables that are printed above
-            #print(data)
             FBcursor.execute(f"select MAX(fb.fb_ID) from food_bank fb")
             maxfb_ID = FBcursor.fetchall()
             FBcursor.execute(f"select MAX(fi.fd_ID) from food_item fi")
             maxfd_ID = FBcursor.fetchall()
-            if(maxfd_ID != []):
+            if (maxfd_ID != []):
                 maxfd_ID = int(maxfd_ID[0][0]) + 1
             else:
                 maxfd_ID = 1
             newfb_ID = None
-            if(maxfb_ID!=[]):
+            if (maxfb_ID != []):
                 newfb_ID = int(maxfb_ID[0][0]) + 1
             else:
                 newfb_ID = 1
@@ -190,24 +190,25 @@ class FBView:
             locationCheck = FBcursor.fetchall()
             FBcursor.execute(f"select * from food_bank fb where fb.Address = '{newloc}'")
             addressCheck = FBcursor.fetchall()
-            #TODO: Check phone number?
-            #TODO: Validate Hours?
-            #TODO: Format Hours in same format as database, the hours need to be NULL if there is nothing there.
-            if(locationCheck==[] and addressCheck==[]):
-                FBcursor.execute(f"insert into foodforyou.food_bank values('{FBName}', " +\
-                               f"'{newloc}', '{neighborhood}', '{phone_number}', '{newfb_ID}')")
-                FBcursor.execute(f"insert into foodforyou.hours values ('{newfb_ID}', '{MtimeOpen.getTime()}', '{MtimeClose.getTime()}',"+\
-                                 f"'{TtimeOpen.getTime()}', '{TtimeClose.getTime()}','{WtimeOpen.getTime()}', '{WtimeClose.getTime()}',"+\
-                                 f"'{RtimeOpen.getTime()}', '{RtimeClose.getTime()}','{FtimeOpen.getTime()}', '{FtimeClose.getTime()}',"+\
-                                 f"'{StimeOpen.getTime()}', '{StimeClose.getTime()}','{UtimeOpen.getTime()}', '{UtimeClose.getTime()}')")
+            # TODO: Check phone number?
+            # TODO: Validate Hours?
+            # TODO: Format Hours in same format as database, the hours need to be NULL if there is nothing there.
+            if (locationCheck == [] and addressCheck == []):
+                FBcursor.execute(f"insert into foodforyou.food_bank values('{FBName}', " + \
+                                 f"'{newloc}', '{neighborhood}', '{phone_number}', '{newfb_ID}')")
+                FBcursor.execute(
+                    f"insert into foodforyou.hours values ('{newfb_ID}', '{MtimeOpen.getTime()}', '{MtimeClose.getTime()}'," + \
+                    f"'{TtimeOpen.getTime()}', '{TtimeClose.getTime()}','{WtimeOpen.getTime()}', '{WtimeClose.getTime()}'," + \
+                    f"'{RtimeOpen.getTime()}', '{RtimeClose.getTime()}','{FtimeOpen.getTime()}', '{FtimeClose.getTime()}'," + \
+                    f"'{StimeOpen.getTime()}', '{StimeClose.getTime()}','{UtimeOpen.getTime()}', '{UtimeClose.getTime()}')")
                 for line in data:
                     item_name = line[0]
                     category = line[1]
                     quantity = int(line[2])
-                    #units = line[3]
-                    FBcursor.execute(f"insert into foodforyou.food_item values ('{item_name}', '{category}', {quantity}, '{units}', '{FBName}', {int(newfb_ID)}, {maxfd_ID})")
+                    # units = line[3]
+                    FBcursor.execute(
+                        f"insert into foodforyou.food_item values ('{item_name}', '{category}', {quantity}, '{units}', '{FBName}', {int(newfb_ID)}, {maxfd_ID})")
                     maxfd_ID += 1
-
 
                 FBconnection.commit()
                 fetchData(newfb_ID)
@@ -215,21 +216,18 @@ class FBView:
                 messagebox.showerror("ERROR", "Food bank with this name or address appears to already exist.")
 
             # when finished up
-           
+
             newFBScreen.destroy()
 
         newFBScreen = Toplevel(self.root)
         newFBScreen.geometry("800x300")
         newFBScreen.configure(background='white')
 
-
-
-
         fileUploadButton = ttk.Button(newFBScreen, text="Upload Data", width=15, command=fileUpload)
-        fileUploadButton.place(x=400, y=200)
+        fileUploadButton.place(x=600, y=175)
 
         submitButton = ttk.Button(newFBScreen, text="Save changes", width=15, command=saveChanges)
-        submitButton.place(x=600, y=200)
+        submitButton.place(x=600, y=225)
 
         ttk.Label(newFBScreen, text="Insert times").place(x=75, y=25)
         ttk.Label(newFBScreen, text="Open", font=(font, 9)).place(x=25, y=75)
@@ -242,6 +240,14 @@ class FBView:
         ttk.Label(newFBScreen, text="Insert Food Bank Name").place(x=75, y=225)
         FBNameInput = ttk.Entry(newFBScreen, width=30)
         FBNameInput.place(x=75, y=250)
+
+        ttk.Label(newFBScreen, text="Neighborhood").place(x=300, y=160)
+        FBNameInput = ttk.Entry(newFBScreen, width=30)
+        FBNameInput.place(x=300, y=185)
+
+        ttk.Label(newFBScreen, text="Phone Number").place(x=300, y=225)
+        FBNameInput = ttk.Entry(newFBScreen, width=30)
+        FBNameInput.place(x=300, y=250)
 
         ttk.Label(newFBScreen, text="Monday", font=(font, 9)).place(x=75, y=50)
         MtimeOpen = time.App(newFBScreen)
@@ -288,6 +294,7 @@ class FBView:
         # TODO show fb hours database
 
         newFBScreen.mainloop()
+
 
 class DataView:
     def __init__(self, parent):
@@ -357,13 +364,14 @@ class DataView:
             food_id = row[3]
             location = row[4]
 
-            #UpdateItem(self.root, item, quantity, units, location, food_id)
+            # UpdateItem(self.root, item, quantity, units, location, food_id)
+
         def export():
             Dcursor.execute("SELECT * from outgoing")
             result = Dcursor.fetchall()
             header = []
             toWrite = []
-            if(result):
+            if (result):
                 toWrite.append(["Item_name", "Category", "Quantity", "Units", "Location", "fb_ID", "fd_ID"])
                 for row in result:
                     toWrite.append(row)
@@ -373,7 +381,6 @@ class DataView:
                         csvw.writerow(line)
             else:
                 messagebox.showerror("ERROR", "There are no entries in the database.")
-
 
         ttk.Label(root, text="Search by item").place(x=675, y=110)
 
@@ -394,7 +401,6 @@ class DataView:
 
         SearchButton = ttk.Button(root, text="Search", width=15, command=fetchData)
         SearchButton.place(x=675, y=350)
-
 
         exportButton = ttk.Button(root, text="Export data", width=15, command=export)
         exportButton.place(x=675, y=420)
@@ -427,7 +433,7 @@ class DataView:
         table.bind('<ButtonRelease-1>', update)
         fetchData()
         table.pack(fill=BOTH, expand=1)
-        
+
 
 root = Tk()
 root.geometry('900x540')
@@ -435,11 +441,10 @@ tabControl = ttk.Notebook(root)
 use_theme(root)
 
 tab1 = FBView(root).root
-tabControl.add(tab1, text= "Food Banks")
+tabControl.add(tab1, text="Food Banks")
 
 tab2 = DataView(root).root
-tabControl.add(tab2, text= "Data Log")
-
+tabControl.add(tab2, text="Data Log")
 
 tabControl.pack(expand=1, fill="both")
 root.mainloop()

@@ -22,4 +22,4 @@ class App(tk.Frame):
     "author: KS"
     "returns time in (hour, time)"
     def getTime(self):
-        return(int(self.hourstr.get()), int(self.minstr.get()))
+        return(self.hourstr.get(), self.minstr.get())
