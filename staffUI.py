@@ -6,47 +6,49 @@ cursor = None
 
 class NewItem:
     def __init__(self, parent):
-        self.screen = Toplevel(parent)
+        #----------------------setting up screen for "New item"---------
+        self.screen = Toplevel(parent)      #creates a child window of main screen
         self.screen.title("New Item")
         self.swidth = 300
         self.screen.geometry(f'{self.swidth}x300')
-        self.locations = fetchLocations(cursor)
-        self.categories = fetchCategory(cursor)
+        self.screen.configure(background='white')
+        self.locations = fetchLocations(cursor)     #holds list of locations in database
+        self.categories = fetchCategory(cursor)     #holds list of categories in databse
+        #--------------------------------------------------------------
 
-        self.item_to_update = StringVar()
+        #============== holds what the user inputs =================
         self.quantity_to_update = IntVar()
-        self.loc_to_update = StringVar()
         self.units_to_update = StringVar()
-        self.screenopt = StringVar()
+        #===========================================================
 
         global font
         global searchInputSize
 
-        self.screen.configure(background='white')
-
+        #================== user widgets =============================================================
         ttk.Label(self.screen, text="New Item", font=(font, 13)).place(x=(self.swidth)/2 - 30, y=10)
 
         ttk.Label(self.screen, text="item").place(x=50, y=50)
-        iteminput = ttk.Entry(self.screen, width=20, font=(font, searchInputSize))
+        iteminput = ttk.Entry(self.screen, width=20, font=(font, searchInputSize)) # user input for food item
         iteminput.place(x=(self.swidth) / 2 - 30, y=50)
 
         ttk.Label(self.screen, text="category:").place(x=50, y=80)
-        categoryinput = ttk.Combobox(self.screen, values=self.categories,
-                                     font=(font, 8))
+        categoryinput = ttk.Combobox(self.screen, values=self.categories, font=(font, 8)) #user dropdown for category
         categoryinput.place(x=(self.swidth) / 2 - 30, y=80)
 
         ttk.Label(self.screen, text="quantity:").place(x=50, y=110)
-        quantityinput = ttk.Entry(self.screen, width=10, textvariable=self.quantity_to_update,
-                                  font=(font, searchInputSize))
+        quantityinput = ttk.Entry(self.screen, width=10,                        #user input for quantity
+                                  textvariable=self.quantity_to_update, font=(font, searchInputSize))
         quantityinput.place(x=(self.swidth) / 2 - 30, y=110)
 
         ttk.Label(self.screen, text="units: ").place(x=50, y=140)
-        unitsInput = ttk.Entry(self.screen, width=10, textvariable=self.units_to_update, font=(font, searchInputSize))
+        unitsInput = ttk.Entry(self.screen, width=10,                           #user input for units
+                               textvariable=self.units_to_update, font=(font, searchInputSize))
         unitsInput.place(x=(self.swidth) / 2 - 30, y=140)
 
         ttk.Label(self.screen, text="location:").place(x=50, y=170)
-        locationinput = ttk.Combobox(self.screen, values=self.locations, font=(font, 8))
+        locationinput = ttk.Combobox(self.screen, values=self.locations, font=(font, 8))    #user dropdown for location
         locationinput.place(x=(self.swidth) / 2 - 30, y=170)
+        #======================================================================
 
         def saveChanges():
             item_name = iteminput.get()
@@ -94,54 +96,62 @@ class NewItem:
 
 class UpdateItem:
     def __init__(self, parent, item, quantity, units, location, food_id):
-        self.screen = Toplevel(parent)
+        #----------------------setting up screen for "Update item"---------
+        self.screen = Toplevel(parent) #creates a child window of main screen
         screen = self.screen
         self.screen.title("Updating")
+        screen.configure(background='white')
         self.swidth = 300
         self.screen.geometry(f'{self.swidth}x300')
         self.locations = fetchLocations(cursor)
 
-        self.item_to_update = StringVar()
+        #============== holds what the user inputs =================
         self.quantity_to_update = IntVar()
-        self.loc_to_update = StringVar()
         self.units_to_update = StringVar()
-        self.screenopt = StringVar()
+        self.screenopt = StringVar() #holds if the user is updating, moving or deleting
+        #============== holds what the user inputs =================
+
 
         global font
         global searchInputSize
 
-        screen.configure(background='white')
-
         #-------------------------------------------------- input widgets -----------------------------------------
+        # user input for food item
         ttk.Label(screen, text="item").place(x=50, y=50)
         iteminput = ttk.Entry(screen, width=20, font=(font, searchInputSize))
-        iteminput.insert(0, item)
-        iteminput.configure(state=DISABLED)
+        iteminput.insert(0, item)   #inserts the existing food item
+        iteminput.configure(state=DISABLED)     #makes the text field read-only
         iteminput.place(x=(self.swidth) / 2 - 30, y=50)
 
+        # user input for quantity
         ttk.Label(screen, text="quantity:").place(x=50, y=80)
         quantityinput = ttk.Entry(screen, width=10, textvariable=self.quantity_to_update, font=(font, searchInputSize))
-        self.quantity_to_update.set(quantity)
+        self.quantity_to_update.set(quantity)   # inserts the existing quantity
         quantityinput.place(x=(self.swidth) / 2 - 30, y=80)
 
+        # user input for units
         ttk.Label(screen, text="units: ").place(x=50, y=110)
         unitsInput = ttk.Entry(screen, width=10, textvariable=self.units_to_update, font=(font, searchInputSize))
-        self.units_to_update.set(units)
+        self.units_to_update.set(units)     # inserts the existing units
         unitsInput.place(x=(self.swidth) / 2 - 30, y=110)
 
+        # user input for location
         ttk.Label(screen, text="location:").place(x=50, y=140)
         locationinput = ttk.Entry(screen, width=20, font=(font, searchInputSize))
-        locationinput.insert(0, location)
+        locationinput.insert(0, location)   # inserts the existing location
         locationinput.place(x=(self.swidth) / 2 - 30, y=140)
-        locationinput.configure(state="disabled")
+        locationinput.configure(state="disabled")       #makes the text field read-only
+
+        # location input (only for moving item, so placement will be later)
+        locationDD = ttk.Combobox(screen, values=self.locations, font=(font, 8))
+
+        #allow users to save their changes
+        submitButton = ttk.Button(screen, text="Save changes", width=15)
+        submitButton.place(x=(self.swidth) / 2 - 60, y=250)
 
         fillerlbl = ttk.Label(screen)
         movelbl = ttk.Label(screen, text="location to move items to")
 
-        locationDD = ttk.Combobox(screen, values=self.locations, textvariable=self.loc_to_update,
-                                  font=(font, 8))
-        submitButton = ttk.Button(screen, text="Save changes", width=15)
-        submitButton.place(x=(self.swidth) / 2 - 60, y=250)
 
         # ------------------------------ modification functions -----------------------------------------------
         def compareItems(item1, item2):
@@ -237,33 +247,40 @@ class UpdateItem:
             screen.destroy()
 
         def showScreen(a, b, c):
-            # FOR DB
             s = self.screenopt.get()
-            quantityinput.configure(state="active")
+            #reset to normal state for "update" screen
+            quantityinput.configure(state="active")     #reset from "delete"
             unitsInput.configure(state="active")
             submitButton.configure(text="Save changes")
             unitsInput.configure(state="active")
+            movelbl.pack_forget()       #clears the widgets from the "move" screen
+            locationDD.pack_forget()
+            fillerlbl.pack_forget()
             if s == "update":
-                movelbl.pack_forget()
-                locationDD.pack_forget()
+                pass
             elif s == "delete":
-                movelbl.pack_forget()
-                locationDD.pack_forget()
+                # disable users from editing the items to be deletion
                 quantityinput.configure(state="disabled")
                 unitsInput.configure(state="disabled")
+                #change the action button text
                 submitButton.configure(text="Confirm deletion")
             else:
+                # only want to "edit" quantity -> disable everything but quantity
                 unitsInput.configure(state="disabled")
+                #show moving location dropdown
                 fillerlbl.pack(side=BOTTOM, pady=25)
                 locationDD.pack(side=BOTTOM, pady=5)
                 movelbl.pack(side=BOTTOM)
 
+        #set default screen option as update
         self.screenopt.set("update")
         options = ["update", "move", "delete"]
+        # when screenopt is changed, calls showscreen to change the screen
         self.screenopt.trace('w', showScreen)
+        #holds the screen options
         tabControl = ttk.Combobox(screen, textvariable=self.screenopt, values=options, font=(font, 12), width=7)
         tabControl.pack(pady=10)
-
+        #add action/function to submit button
         submitButton.configure(command=saveChanges)
 
 
@@ -275,6 +292,7 @@ cursor = connection.cursor()
 
 class StaffGUI:
     def __init__(self):
+        #----------------------setting up screen for "New item"---------
         self.root = Tk()
         root = self.root
         self.root.title("Staff")
@@ -282,11 +300,12 @@ class StaffGUI:
         self.root.geometry(f'{self.screenWidth}x540')
         self.foodItemSearchText = StringVar()
         self.ascSort = BooleanVar()
-        self.loc_to_update = StringVar()
         self.locations = fetchLocations(cursor)
         use_theme(root)
         #-----------------------------setting up background---------------------------------------
         global fetchData
+        #structured to catch errors if user does not have background images,
+            # allows the user to run the program without bg images
         try:
             self.bg = PhotoImage(file="img/backgroundimg.png")
             Label(master=root, image=self.bg, borderwidth=0, highlightthickness=0).place(x=0, y=0)
@@ -298,7 +317,6 @@ class StaffGUI:
             print(e)
 
         root.configure(background='white')
-
 
         #-------------------------- item modification functions ---------------------------------------------
         def fetchData():
@@ -365,26 +383,31 @@ class StaffGUI:
 
 
         #--------------------------------------- search widgets -------------------------------------
+        # widgets to search by item
         ttk.Label(root, text="Search by item").place(x=675, y=110)
-
         ItemSearch = ttk.Entry(root, width=25)
         ItemSearch.place(x=675, y=130)
 
+        # widgets to search by item ID
         ttk.Label(root, text="Search by item ID").place(x=675, y=170)
         IDSearch = ttk.Entry(root, width=25)
         IDSearch.place(x=675, y=190)
 
+        # widgets to filter by location
         ttk.Label(root, text="Sort by location").place(x=675, y=230)
         LocationFilter = ttk.Combobox(root, values=self.locations)
         LocationFilter.place(x=675, y=250)
 
+        # widgets to sort by quantity
         QuantitySortButton = ttk.Checkbutton(root, text="Sort Ascending", width=15, command=fetchData, onvalue=True,
                                              offvalue=False, variable=self.ascSort)
         QuantitySortButton.place(x=675, y=300)
 
+        # widgets to do the search action
         SearchButton = ttk.Button(root, text="Search", width=15, command=fetchData)
         SearchButton.place(x=675, y=350)
 
+        # widgets to do the "add item" action
         addButton = ttk.Button(text="New Item +", command=addItem, width=15)
         addButton.place(x=675, y=410)
 
@@ -392,7 +415,7 @@ class StaffGUI:
         #------------------------------------ table ---------------------------------------------------
         viewFrame = Frame(root, bd=5, relief='ridge', bg='wheat')
         viewFrame.place(x=30, y=110, width=600, height=350)
-        xScroll = Scrollbar(viewFrame, orient=HORIZONTAL)
+        xScroll = Scrollbar(viewFrame, orient=HORIZONTAL)   #allows the user to scroll
         yScroll = Scrollbar(viewFrame, orient=VERTICAL)
         table = ttk.Treeview(viewFrame, columns=(
             'item_to_filter', 'quantity_to_filter', 'units', 'fid_to_filter', 'location_to_filter'),
