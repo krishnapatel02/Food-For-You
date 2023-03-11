@@ -1,6 +1,7 @@
 # FULL CREDIT TO: https://stackoverflow.com/questions/57034118/time-picker-for-tkinter
 
 import tkinter as tk
+import datetime
 
 class App(tk.Frame):
     def __init__(self, parent):
@@ -21,5 +22,6 @@ class App(tk.Frame):
 
     "author: KS"
     "returns time in (hour, time)"
+    #http://www.learningaboutelectronics.com/Articles/How-to-create-a-time-object-in-Python.php
     def getTime(self):
-        return(self.hourstr.get(), self.minstr.get())
+        return datetime.time(int(self.hourstr.get()), int(self.minstr.get()), 0)
