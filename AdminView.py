@@ -112,7 +112,6 @@ class FBView:
                 expected = ["item", "category", "quantity", "units"] #columns of csv must match
 
                 dict_from_csv = list(csv.DictReader(file))          #turn csv into dictionary
-                print(dict_from_csv[0].keys())
                 if expected != [x for x in dict_from_csv[0].keys()]:
                     messagebox.showerror("File error", "Incorrect headers: expected 'item', 'category', 'quantity', 'units'")
                     return -1
@@ -151,9 +150,9 @@ class FBView:
             # check headers
             global data
             data = validateFile(filepath)
+            #was an error
             if data == -1:
                 return
-            print(data)
             print("Succesfully imported file")
 
         def saveChanges():
@@ -226,7 +225,7 @@ class FBView:
             newFBScreen.destroy()
 
         newFBScreen = Toplevel(self.root)
-        newFBScreen.geometry("800x300")
+        newFBScreen.geometry("800x315")
         newFBScreen.configure(background='white')
 
         fileUploadButton = ttk.Button(newFBScreen, text="Upload Data", width=15, command=fileUpload)
@@ -236,7 +235,7 @@ class FBView:
         submitButton.place(x=600, y=225)
 
         ttk.Label(newFBScreen, text="Insert times").place(x=75, y=25)
-        ttk.Label(newFBScreen, text="To indicate 'Closed', set the desired day open and close times equal.",
+        ttk.Label(newFBScreen, text="To indicate 'Closed', set the open and close times of the desired day equal.",
                   font=(font, 9), foreground="gray").place(x=350, y=25)
 
         ttk.Label(newFBScreen, text="Open", font=(font, 9)).place(x=25, y=75)
@@ -257,6 +256,7 @@ class FBView:
         ttk.Label(newFBScreen, text="Phone Number").place(x=300, y=225)
         PhoneNumInput = ttk.Entry(newFBScreen, width=30)
         PhoneNumInput.place(x=300, y=250)
+        ttk.Label(newFBScreen, text="Expected format: (XXX) XXX-XXXX", font=(font,9), foreground="gray").place(x=300, y=275)
 
         ttk.Label(newFBScreen, text="Monday", font=(font, 9)).place(x=75, y=50)
         MtimeOpen = time.App(newFBScreen)
