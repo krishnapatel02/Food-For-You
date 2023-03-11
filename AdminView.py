@@ -17,11 +17,11 @@ verify that all times are times are inputted before submit
 """
 
 FBconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
-# FBconnection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
+#FBconnection = connectToDatabase("krishna", "pass", "127.0.0.1", 3306, "foodforyou")
 FBcursor = FBconnection.cursor()
 
 Dconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
-# Dconnection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
+#Dconnection = connectToDatabase("krishna", "pass", "127.0.0.1", 3306, "foodforyou")
 Dcursor = Dconnection.cursor()
 
 
@@ -101,10 +101,27 @@ class FBView:
         # fetchData()
         table.pack(fill=BOTH, expand=1)
 
+    
 
     # Add new food bank screen
     def addFB(self):
         # if succesful return a dictionary of the csv
+        def compareTimes(timeDict:dict):
+            keys = timeDict.keys()
+            formattedTime = []
+            for key in keys:
+                time = timeDict[key]
+                if(time[0] == time[1]):
+                    formattedTime.append('')
+                    formattedTime.append('')
+                elif(time[0] < time[1]):
+                    formattedTime.append(str(time[0]))
+                    formattedTime.append(str(time[1]))
+                else:
+                    formattedTime = None
+                    break
+            return formattedTime
+        
         def validateFile(filepath):
             # checking headers
             try:
@@ -169,8 +186,9 @@ class FBView:
                      "Saturday": (StimeOpen.getTime(), StimeClose.getTime()),
                      "Sunday": (UtimeOpen.getTime(), UtimeClose.getTime())
                      }
-
+            openTimes = compareTimes(times)
             phone_number = PhoneNumInput.get()
+            
             if not self.checkPhoneNum(phone_number):
                 messagebox.showerror("ERROR", "Invalid phone number. Must be formatted as (XXX) XXX-XXXX")
                 return
@@ -198,27 +216,30 @@ class FBView:
             # TODO: Check phone number?
             # TODO: Validate Hours?
             # TODO: Format Hours in same format as database, the hours need to be NULL if there is nothing there.
-            if (locationCheck == [] and addressCheck == []):
-                FBcursor.execute(f"insert into foodforyou.food_bank values('{FBName}', " + \
-                                 f"'{newloc}', '{neighborhood}', '{phone_number}', '{newfb_ID}')")
-                FBcursor.execute(
-                    f"insert into foodforyou.hours values ('{newfb_ID}', '{MtimeOpen.getTime()}', '{MtimeClose.getTime()}'," + \
-                    f"'{TtimeOpen.getTime()}', '{TtimeClose.getTime()}','{WtimeOpen.getTime()}', '{WtimeClose.getTime()}'," + \
-                    f"'{RtimeOpen.getTime()}', '{RtimeClose.getTime()}','{FtimeOpen.getTime()}', '{FtimeClose.getTime()}'," + \
-                    f"'{StimeOpen.getTime()}', '{StimeClose.getTime()}','{UtimeOpen.getTime()}', '{UtimeClose.getTime()}')")
-                for line in data:
-                    item_name = line[0]
-                    category = line[1]
-                    quantity = int(line[2])
-                    # units = line[3]
+            if(openTimes != None):
+                if (locationCheck == [] and addressCheck == []):
+                    FBcursor.execute(f"insert into foodforyou.food_bank values('{FBName}', " + \
+                                    f"'{newloc}', '{neighborhood}', '{phone_number}', '{newfb_ID}')")
                     FBcursor.execute(
-                        f"insert into foodforyou.food_item values ('{item_name}', '{category}', {quantity}, '{units}', '{FBName}', {int(newfb_ID)}, {maxfd_ID})")
-                    maxfd_ID += 1
+                        f"insert into foodforyou.hours values ('{newfb_ID}', '{openTimes[0]}', '{openTimes[1]}'," + \
+                        f"'{openTimes[2]}', '{openTimes[3]}','{openTimes[4]}', '{openTimes[5]}'," + \
+                        f"'{openTimes[6]}', '{openTimes[7]}','{openTimes[8]}', '{openTimes[9]}'," + \
+                        f"'{openTimes[10]}', '{openTimes[11]}','{openTimes[12]}', '{openTimes[13]}')")
+                    for line in data:
+                        item_name = line[0]
+                        category = line[1]
+                        quantity = int(line[2])
+                        # units = line[3]
+                        FBcursor.execute(
+                            f"insert into foodforyou.food_item values ('{item_name}', '{category}', {quantity}, '{units}', '{FBName}', {int(newfb_ID)}, {maxfd_ID})")
+                        maxfd_ID += 1
 
-                FBconnection.commit()
-                fetchData(newfb_ID)
+                    FBconnection.commit()
+                    fetchData(newfb_ID)
+                else:
+                    messagebox.showerror("ERROR", "Food bank with this name or address appears to already exist.")
             else:
-                messagebox.showerror("ERROR", "Food bank with this name or address appears to already exist.")
+                messagebox.showerror("ERROR", "One of the open times is after the close time.")
 
             # when finished up
 
