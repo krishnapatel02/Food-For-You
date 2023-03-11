@@ -111,10 +111,9 @@ class FBView:
                 file = open(filepath, 'r')
                 expected = ["item", "category", "quantity", "units"] #columns of csv must match
 
-
                 dict_from_csv = list(csv.DictReader(file))          #turn csv into dictionary
-
-                if expected != [x.strip() for x in dict_from_csv[0].keys()]:
+                print(dict_from_csv[0].keys())
+                if expected != [x for x in dict_from_csv[0].keys()]:
                     messagebox.showerror("File error", "Incorrect headers: expected 'item', 'category', 'quantity', 'units'")
                     return -1
 
@@ -126,11 +125,14 @@ class FBView:
                     if not (quant.isdigit()):
                         messagebox.showerror("File error", "Invalid quantity (" + quant + ") on row " + str(i + 2))
                         return -1
+                    if (not item['item']) or (not item['category']) or (not item['quantity']) or (not item['units']):
+                        messagebox.showerror("File error", "Empty values row " + str(i + 2))
+                        return -1
 
                 returnval = []
                 for x in dict_from_csv:
-                    i, c, q = x.values()
-                    returnval.append((i, c, q))
+                    i, c, q, u = x.values()
+                    returnval.append((i, c, q, u))
                 return returnval
 
             except Exception as e:
@@ -171,7 +173,7 @@ class FBView:
 
             phone_number = PhoneNumInput.get()
             if not self.checkPhoneNum(phone_number):
-                messagebox.showerror("ERROR", "Invalid phone number. Must be formated as (XXX) XXX-XXXX")
+                messagebox.showerror("ERROR", "Invalid phone number. Must be formatted as (XXX) XXX-XXXX")
                 return
 
             neighborhood = NeighborhoodInput.get()
@@ -234,6 +236,9 @@ class FBView:
         submitButton.place(x=600, y=225)
 
         ttk.Label(newFBScreen, text="Insert times").place(x=75, y=25)
+        ttk.Label(newFBScreen, text="To indicate 'Closed', set the desired day open and close times equal.",
+                  font=(font, 9), foreground="gray").place(x=350, y=25)
+
         ttk.Label(newFBScreen, text="Open", font=(font, 9)).place(x=25, y=75)
         ttk.Label(newFBScreen, text="Close", font=(font, 9)).place(x=25, y=100)
 
