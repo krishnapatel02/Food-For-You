@@ -27,7 +27,7 @@ Dcursor = Dconnection.cursor()
 
 class FBView:
     def __init__(self, parent):
-        self.root = ttk.Frame(parent)
+        self.root = Frame(parent, bg="white")
         root = self.root
         self.foodItemSearchText = StringVar()
         self.ascSort = BooleanVar()
@@ -97,7 +97,7 @@ class FBView:
             #UpdateItem(self.root, item, quantity, units, location, food_id)
 
         AddFBButton = ttk.Button(root, text="New Food Bank +", width=20, command=self.addFB)
-        AddFBButton.place(x=700, y=200)
+        AddFBButton.place(x=675, y=200)
 
         viewFrame = Frame(root, bd=5, relief='ridge', bg='wheat')
         viewFrame.place(x=30, y=110, width=600, height=350)
@@ -135,12 +135,12 @@ class FBView:
             # checking headers
             try:
                 file = open(filepath, 'r')
-                expected = ["item", "quantity"]
+                expected = ["item", "category", "quantity"]
 
                 dict_from_csv = list(csv.DictReader(file))
 
                 if expected != [x.strip() for x in dict_from_csv[0].keys()]:
-                    messagebox.showerror("File error", "Incorrect headers")
+                    messagebox.showerror("File error", "Incorrect headers: expected 'item', 'category', 'quantity'")
                     return -1
 
                 for i, item in enumerate(dict_from_csv):
@@ -161,7 +161,7 @@ class FBView:
             except Exception as e:
                 print("Error:", e)
                 messagebox.showerror("File error",
-                                     "Having trouble uploading file. Please ensure the file uploaded is a CSV with two columns of 'item' and 'quantity'")
+                                     "Having trouble uploading file. Please ensure the file uploaded is a CSV with the columns 'item', 'category' and 'quantity'")
 
         def fileUpload():
             filepath = filedialog.askopenfilename()
@@ -204,14 +204,12 @@ class FBView:
             # when finished up
             newFBScreen.destroy()
 
-        newFBScreen = Tk()
+        newFBScreen = Toplevel(self.root)
         newFBScreen.geometry("800x300")
+        newFBScreen.configure(background='white')
 
-        locationInput = ttk.Entry(newFBScreen, width=20)
-        locationInput.place(x=75, y=200)
 
-        FBNameInput = ttk.Entry(newFBScreen, width=20)
-        FBNameInput.place(x=225, y=200)
+
 
         fileUploadButton = ttk.Button(newFBScreen, text="Upload Data", width=15, command=fileUpload)
         fileUploadButton.place(x=400, y=200)
@@ -220,48 +218,54 @@ class FBView:
         submitButton.place(x=600, y=200)
 
         ttk.Label(newFBScreen, text="Insert times").place(x=75, y=25)
-        ttk.Label(newFBScreen, text="Open").place(x=25, y=75)
-        ttk.Label(newFBScreen, text="Close").place(x=25, y=100)
-        ttk.Label(newFBScreen, text="Insert Location").place(x=75, y=175)
-        ttk.Label(newFBScreen, text="Insert Food Bank Name").place(x=225, y=175)
+        ttk.Label(newFBScreen, text="Open", font=(font, 9)).place(x=25, y=75)
+        ttk.Label(newFBScreen, text="Close", font=(font, 9)).place(x=25, y=100)
 
-        ttk.Label(newFBScreen, text="Monday").place(x=75, y=50)
+        ttk.Label(newFBScreen, text="Insert Street Address").place(x=75, y=160)
+        locationInput = ttk.Entry(newFBScreen, width=30)
+        locationInput.place(x=75, y=185)
+
+        ttk.Label(newFBScreen, text="Insert Food Bank Name").place(x=75, y=225)
+        FBNameInput = ttk.Entry(newFBScreen, width=30)
+        FBNameInput.place(x=75, y=250)
+
+        ttk.Label(newFBScreen, text="Monday", font=(font, 9)).place(x=75, y=50)
         MtimeOpen = time.App(newFBScreen)
         MtimeOpen.place(x=75, y=75)
         MtimeClose = time.App(newFBScreen)
         MtimeClose.place(x=75, y=100)
 
-        ttk.Label(newFBScreen, text="Tuesday").place(x=175, y=50)
+        ttk.Label(newFBScreen, text="Tuesday", font=(font, 9)).place(x=175, y=50)
         TtimeOpen = time.App(newFBScreen)
         TtimeOpen.place(x=175, y=75)
         TtimeClose = time.App(newFBScreen)
         TtimeClose.place(x=175, y=100)
 
-        ttk.Label(newFBScreen, text="Wednesday").place(x=275, y=50)
+        ttk.Label(newFBScreen, text="Wednesday", font=(font, 9)).place(x=275, y=50)
         WtimeOpen = time.App(newFBScreen)
         WtimeOpen.place(x=275, y=75)
         WtimeClose = time.App(newFBScreen)
         WtimeClose.place(x=275, y=100)
 
-        ttk.Label(newFBScreen, text="Thursday").place(x=375, y=50)
+        ttk.Label(newFBScreen, text="Thursday", font=(font, 9)).place(x=375, y=50)
         RtimeOpen = time.App(newFBScreen)
         RtimeOpen.place(x=375, y=75)
         RtimeClose = time.App(newFBScreen)
         RtimeClose.place(x=375, y=100)
 
-        ttk.Label(newFBScreen, text="Friday").place(x=475, y=50)
+        ttk.Label(newFBScreen, text="Friday", font=(font, 9)).place(x=475, y=50)
         FtimeOpen = time.App(newFBScreen)
         FtimeOpen.place(x=475, y=75)
         FtimeClose = time.App(newFBScreen)
         FtimeClose.place(x=475, y=100)
 
-        ttk.Label(newFBScreen, text="Saturday").place(x=575, y=50)
+        ttk.Label(newFBScreen, text="Saturday", font=(font, 9)).place(x=575, y=50)
         StimeOpen = time.App(newFBScreen)
         StimeOpen.place(x=575, y=75)
         StimeClose = time.App(newFBScreen)
         StimeClose.place(x=575, y=100)
 
-        ttk.Label(newFBScreen, text="Sunday").place(x=675, y=50)
+        ttk.Label(newFBScreen, text="Sunday", font=(font, 9)).place(x=675, y=50)
         UtimeOpen = time.App(newFBScreen)
         UtimeOpen.place(x=675, y=75)
         UtimeClose = time.App(newFBScreen)
@@ -273,7 +277,7 @@ class FBView:
 
 class DataView:
     def __init__(self, parent):
-        self.root = ttk.Frame(parent)
+        self.root = Frame(parent, bg="white")
         root = self.root
         self.foodItemSearchText = StringVar()
         self.ascSort = BooleanVar()
@@ -349,32 +353,34 @@ class DataView:
                 file.write(str(result[i]) + "\n")
             file.close()
 
-        ttk.Label(root, text="Search by item").place(x=700, y=110)
+        ttk.Label(root, text="Search by item").place(x=675, y=110)
 
-        #searchframe = Frame(root, x=700, y=140)
         ItemSearch = ttk.Entry(root, width=25)
-        ItemSearch.place(x=700, y=135)
+        ItemSearch.place(x=675, y=130)
 
-        ttk.Label(root, text="Search by item ID").place(x=700, y=185)
+        ttk.Label(root, text="Search by item ID").place(x=675, y=170)
         IDSearch = ttk.Entry(root, width=25)
-        IDSearch.place(x=700, y=210)
+        IDSearch.place(x=675, y=190)
 
-        #ItemSearch.grid(searchframe, row=0, column=0)
-        # ttk.Label(root, text="Sort quantity").place(x=700, y=50)
-
-        ttk.Label(root, text="Sort by location").place(x=700, y=260)
+        ttk.Label(root, text="Sort by location").place(x=675, y=230)
         LocationFilter = ttk.Combobox(root, values=self.locations)
-        LocationFilter.place(x=700, y=285)
+        LocationFilter.place(x=675, y=250)
 
         QuantitySortButton = ttk.Checkbutton(root, text="Sort Ascending", width=15, command=fetchData, onvalue=True,
                                              offvalue=False, variable=self.ascSort)
-        QuantitySortButton.place(x=700, y=335)
+        QuantitySortButton.place(x=675, y=300)
 
+<<<<<<< HEAD
         SearchButton = ttk.Button(root, text="Search", width=15, command=search)
         SearchButton.place(x=700, y=400)
+=======
+        SearchButton = ttk.Button(root, text="Search", width=15, command=fetchData)
+        SearchButton.place(x=675, y=350)
+
+>>>>>>> b08a9a3e2be6de8cb8f91c8563116e086b819d29
 
         exportButton = ttk.Button(root, text="Export data", width=15, command=export)
-        exportButton.place(x=700, y=50)
+        exportButton.place(x=675, y=420)
 
         viewFrame = Frame(root, bd=5, relief='ridge', bg='wheat')
         viewFrame.place(x=30, y=110, width=600, height=350)
@@ -406,37 +412,17 @@ class DataView:
         table.pack(fill=BOTH, expand=1)
         
 
-# form = Tk()
-# tab_parent = ttk.Notebook(form)
-# tab1 = ttk.Frame(tab_parent)
-# tab2 = ttk.Frame(tab_parent)
-# tab_parent.add(tab1, text="All Records")
-# tab_parent.add(tab2, text="Add New Record")
-# tab_parent.pack(expand=1, fill='both')
-
 root = Tk()
 root.geometry('900x540')
 tabControl = ttk.Notebook(root)
+use_theme(root)
 
 tab1 = FBView(root).root
-#tab1.place(x=0, y=0, width=900, height = 540)
-tabControl.add(tab1, text= "foodbanks")
+tabControl.add(tab1, text= "Food Banks")
 
 tab2 = DataView(root).root
-tabControl.add(tab2, text= "data")
-#tab2.place(x=0, y=0, width=900, height = 540)
+tabControl.add(tab2, text= "Data Log")
+
 
 tabControl.pack(expand=1, fill="both")
 root.mainloop()
-
-#
-# try:
-#     bg = PhotoImage(master=tab1, file="img/backgroundimg.png")
-#
-#     Label(root, image=bg, borderwidth=0, highlightthickness=0).place(x=0, y=0)
-#
-#     trailing_img = PhotoImage(master=root, file="img/trailingIMG.png")
-#     for i in range(0, 900, trailing_img.width()):
-#         Label(master=root, image=trailing_img, bg='white').place(x=i, y=480)
-# except Exception as e:
-#     print(e)
