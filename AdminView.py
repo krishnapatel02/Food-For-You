@@ -17,12 +17,12 @@ allow times to be none (store is closed)
 verify that all times are times are inputted before submit
 """
 
-#FBconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
-FBconnection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
+FBconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
+#FBconnection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
 FBcursor = FBconnection.cursor()
 
-#Dconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
-Dconnection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
+Dconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
+#Dconnection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
 Dcursor = Dconnection.cursor()
 
 class FBView:
@@ -35,9 +35,9 @@ class FBView:
         self.locations = fetchLocations(FBcursor)
 
         global font
-
-        def fetchData():
-            search()
+        global fetchData
+        def fetchData(newFBID):
+            search(newFBID)
             rows = FBcursor.fetchall()
 
             # Delete the old table and insert each row in the current database to accomplish refresh
@@ -47,41 +47,9 @@ class FBView:
                 for row in rows:
                     table.insert('', END, values=row)
 
-        def search():
-            pass
-            # item = ItemSearch.get()
-            # locationBool = True
-            # itemBool = True
-            # location = LocationFilter.get()
-            # ascending = self.ascSort.get()
-            # if (location == "None" or location == ""):
-            #     locationBool = False
-            # if (item.strip() == ""):
-            #     itemBool = False
-            # if (locationBool and itemBool and ascending):
-            #     cursor.execute(
-            #         f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}' and fb.location = '{location}' order by fi.Quantity ASC")
-            # elif (locationBool and ascending):
-            #     cursor.execute(
-            #         f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fb.location = '{location}' order by fi.Quantity ASC")
-            # elif (itemBool and ascending):
-            #     cursor.execute(
-            #         f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}' order by fi.Quantity ASC")
-            # elif (itemBool and locationBool):
-            #     cursor.execute(
-            #         f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}' and fb.location = '{location}'")
-            # elif (itemBool):
-            #     cursor.execute(
-            #         f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}'")
-            # elif (locationBool):
-            #     cursor.execute(
-            #         f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fb.location = '{location}'")
-            # elif (ascending):
-            #     cursor.execute(
-            #         f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) order by fi.quantity ASC")
-            # else:
-            #     cursor.execute(
-            #         f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id)")
+        def search(newFBID):
+           FBcursor.execute(
+                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fb.fb_id = {newFBID}")
 
         def update(e):
             # taken from focus(e) by jerry
@@ -125,7 +93,7 @@ class FBView:
         # get all values and pack the table on to the screen
 
         table.bind('<ButtonRelease-1>', update)
-        fetchData()
+        #fetchData()
         table.pack(fill=BOTH, expand=1)
 
 
@@ -154,8 +122,8 @@ class FBView:
 
                 returnval = []
                 for x in dict_from_csv:
-                    i, q = x.values()
-                    returnval.append((i, q))
+                    i,c, q = x.values()
+                    returnval.append((i,c, q))
                 return returnval
 
             except Exception as e:
@@ -170,12 +138,13 @@ class FBView:
             if fextension != '.csv':
                 messagebox.showerror("Incorrect File Type. Must be CSV")
                 return
-
+            
             # check headers
             global data
             data = validateFile(filepath)
             if data == -1:
                 return
+            print(data)
             print("Succesfully imported file")
 
         def saveChanges():
@@ -183,8 +152,8 @@ class FBView:
             #   (user can input times, location and upload files in any order
             #   so "save changes" does the commit)
 
-            global data
-            newloc = locationInput.get(1.0, "end-1c")
+            
+            newloc = locationInput.get()
             times = {"Monday": (MtimeOpen.getTime(), MtimeClose.getTime()),
                      "Tuesday": (TtimeOpen.getTime(), TtimeClose.getTime()),
                      "Wednesday": (WtimeOpen.getTime(), WtimeClose.getTime()),
@@ -197,11 +166,56 @@ class FBView:
             print("data from csv: ", data)
             print("newloc: ", newloc)
             print("times: ", times)
-
+            phone_number = "(541) 123-4567"
+            neighborhood = "Bethel"
+            FBName = FBNameInput.get()
+            units = "lbs"
             # TODO ---------------- db stuff (upload the dictionary to food items and location database) ------------------------
             #   use the variables that are printed above
+            #print(data)
+            FBcursor.execute(f"select MAX(fb.fb_ID) from food_bank fb")
+            maxfb_ID = FBcursor.fetchall()
+            FBcursor.execute(f"select MAX(fi.fd_ID) from food_item fi")
+            maxfd_ID = FBcursor.fetchall()
+            if(maxfd_ID != []):
+                maxfd_ID = int(maxfd_ID[0][0]) + 1
+            else:
+                maxfd_ID = 1
+            newfb_ID = None
+            if(maxfb_ID!=[]):
+                newfb_ID = int(maxfb_ID[0][0]) + 1
+            else:
+                newfb_ID = 1
+            FBcursor.execute(f"select * from food_bank fb where fb.Location = '{FBName}'")
+            locationCheck = FBcursor.fetchall()
+            FBcursor.execute(f"select * from food_bank fb where fb.Address = '{newloc}'")
+            addressCheck = FBcursor.fetchall()
+            #TODO: Check phone number?
+            #TODO: Validate Hours?
+            #TODO: Format Hours in same format as database, the hours need to be NULL if there is nothing there.
+            if(locationCheck==[] and addressCheck==[]):
+                FBcursor.execute(f"insert into foodforyou.food_bank values('{FBName}', " +\
+                               f"'{newloc}', '{neighborhood}', '{phone_number}', '{newfb_ID}')")
+                FBcursor.execute(f"insert into foodforyou.hours values ('{newfb_ID}', '{MtimeOpen.getTime()}', '{MtimeClose.getTime()}',"+\
+                                 f"'{TtimeOpen.getTime()}', '{TtimeClose.getTime()}','{WtimeOpen.getTime()}', '{WtimeClose.getTime()}',"+\
+                                 f"'{RtimeOpen.getTime()}', '{RtimeClose.getTime()}','{FtimeOpen.getTime()}', '{FtimeClose.getTime()}',"+\
+                                 f"'{StimeOpen.getTime()}', '{StimeClose.getTime()}','{UtimeOpen.getTime()}', '{UtimeClose.getTime()}')")
+                for line in data:
+                    item_name = line[0]
+                    category = line[1]
+                    quantity = int(line[2])
+                    #units = line[3]
+                    FBcursor.execute(f"insert into foodforyou.food_item values ('{item_name}', '{category}', {quantity}, '{units}', '{FBName}', {int(newfb_ID)}, {maxfd_ID})")
+                    maxfd_ID += 1
+
+
+                FBconnection.commit()
+                fetchData(newfb_ID)
+            else:
+                messagebox.showerror("ERROR", "Food bank with this name or address appears to already exist.")
 
             # when finished up
+           
             newFBScreen.destroy()
 
         newFBScreen = Toplevel(self.root)
