@@ -18,11 +18,11 @@ verify that all times are times are inputted before submit
 """
 
 #FBconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
-FBconnection = connectToDatabase("krishna", "pass", "127.0.0.1", 3306, "foodforyou")
+FBconnection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
 FBcursor = FBconnection.cursor()
 
 #Dconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
-Dconnection = connectToDatabase("krishna", "pass", "127.0.0.1", 3306, "foodforyou")
+Dconnection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
 Dcursor = Dconnection.cursor()
 
 class FBView:
@@ -347,11 +347,19 @@ class DataView:
         def export():
             Dcursor.execute("SELECT * from outgoing")
             result = Dcursor.fetchall()
-            file = open("file.csv", "w")
-            file.write("Item_name, Category, Quantity, Units, Location, fb_ID, fd_ID\n")
-            for i in range(1, len(result)):
-                file.write(str(result[i]) + "\n")
-            file.close()
+            header = []
+            toWrite = []
+            if(result):
+                toWrite.append(["Item_name", "Category", "Quantity", "Units", "Location", "fb_ID", "fd_ID"])
+                for row in result:
+                    toWrite.append(row)
+                with open("file.csv", 'w', newline='\n') as csvF:
+                    csvw = csv.writer(csvF, quotechar='"', delimiter=',')
+                    for line in toWrite:
+                        csvw.writerow(line)
+            else:
+                messagebox.showerror("ERROR", "There are no entries in the database.")
+
 
         ttk.Label(root, text="Search by item").place(x=675, y=110)
 
