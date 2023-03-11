@@ -17,12 +17,12 @@ allow times to be none (store is closed)
 verify that all times are times are inputted before submit
 """
 
-FBconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
-# connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
+#FBconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
+FBconnection = connectToDatabase("krishna", "pass", "127.0.0.1", 3306, "foodforyou")
 FBcursor = FBconnection.cursor()
 
-Dconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
-# connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
+#Dconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
+Dconnection = connectToDatabase("krishna", "pass", "127.0.0.1", 3306, "foodforyou")
 Dcursor = Dconnection.cursor()
 
 class FBView:
@@ -126,6 +126,8 @@ class FBView:
 
         table.bind('<ButtonRelease-1>', update)
         fetchData()
+        table.pack(fill=BOTH, expand=1)
+
 
     def addFB(self):
         # if succesfull return a dictionary of the csv
@@ -303,28 +305,28 @@ class DataView:
                 itemBool = False
             if (locationBool and itemBool and ascending):
                 Dcursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}' and fb.location = '{location}' order by fi.Quantity ASC")
+                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from outgoing fi join food_bank fb using(fb_id) where fi.Item_name='{item}' and fb.location = '{location}' order by fi.Quantity ASC")
             elif (locationBool and ascending):
                 Dcursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fb.location = '{location}' order by fi.Quantity ASC")
+                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from outgoing fi join food_bank fb using(fb_id) where fb.location = '{location}' order by fi.Quantity ASC")
             elif (itemBool and ascending):
                 Dcursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}' order by fi.Quantity ASC")
+                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from outgoing fi join food_bank fb using(fb_id) where fi.Item_name='{item}' order by fi.Quantity ASC")
             elif (itemBool and locationBool):
                 Dcursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}' and fb.location = '{location}'")
+                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from outgoing fi join food_bank fb using(fb_id) where fi.Item_name='{item}' and fb.location = '{location}'")
             elif (itemBool):
                 Dcursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}'")
+                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from outgoing fi join food_bank fb using(fb_id) where fi.Item_name='{item}'")
             elif (locationBool):
                 Dcursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fb.location = '{location}'")
+                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from outgoing fi join food_bank fb using(fb_id) where fb.location = '{location}'")
             elif (ascending):
                 Dcursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) order by fi.quantity ASC")
+                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from outgoing fi join food_bank fb using(fb_id) order by fi.quantity ASC")
             else:
                 Dcursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id)")
+                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from outgoing fi join food_bank fb using(fb_id)")
 
         def update(e):
             # taken from focus(e) by jerry
@@ -339,7 +341,13 @@ class DataView:
 
             #UpdateItem(self.root, item, quantity, units, location, food_id)
         def export():
-            pass
+            Dcursor.execute("SELECT * from outgoing")
+            result = Dcursor.fetchall()
+            file = open("file.csv", "w")
+            file.write("Item_name, Category, Quantity, Units, Location, fb_ID, fd_ID\n")
+            for i in range(1, len(result)):
+                file.write(str(result[i]) + "\n")
+            file.close()
 
         ttk.Label(root, text="Search by item").place(x=700, y=110)
 
@@ -362,7 +370,7 @@ class DataView:
                                              offvalue=False, variable=self.ascSort)
         QuantitySortButton.place(x=700, y=335)
 
-        SearchButton = ttk.Button(root, text="Search", width=15, command=fetchData)
+        SearchButton = ttk.Button(root, text="Search", width=15, command=search)
         SearchButton.place(x=700, y=400)
 
         exportButton = ttk.Button(root, text="Export data", width=15, command=export)
@@ -395,6 +403,8 @@ class DataView:
 
         table.bind('<ButtonRelease-1>', update)
         fetchData()
+        table.pack(fill=BOTH, expand=1)
+        
 
 # form = Tk()
 # tab_parent = ttk.Notebook(form)
