@@ -168,9 +168,10 @@ class FBView:
                      "Saturday": (StimeOpen.getTime(), StimeClose.getTime()),
                      "Sunday": (UtimeOpen.getTime(), UtimeClose.getTime())
                      }
+            print(times)
 
-            phone_number = "(541) 123-4567"
-            neighborhood = "Bethel"
+            phone_number = PhoneNumInput.get()
+            neighborhood = NeighborhoodInput.get()
             FBName = FBNameInput.get()
             units = "lbs"
             FBcursor.execute(f"select MAX(fb.fb_ID) from food_bank fb")
@@ -242,12 +243,12 @@ class FBView:
         FBNameInput.place(x=75, y=250)
 
         ttk.Label(newFBScreen, text="Neighborhood").place(x=300, y=160)
-        FBNameInput = ttk.Entry(newFBScreen, width=30)
-        FBNameInput.place(x=300, y=185)
+        NeighborhoodInput = ttk.Entry(newFBScreen, width=30)
+        NeighborhoodInput.place(x=300, y=185)
 
         ttk.Label(newFBScreen, text="Phone Number").place(x=300, y=225)
-        FBNameInput = ttk.Entry(newFBScreen, width=30)
-        FBNameInput.place(x=300, y=250)
+        PhoneNumInput = ttk.Entry(newFBScreen, width=30)
+        PhoneNumInput.place(x=300, y=250)
 
         ttk.Label(newFBScreen, text="Monday", font=(font, 9)).place(x=75, y=50)
         MtimeOpen = time.App(newFBScreen)
