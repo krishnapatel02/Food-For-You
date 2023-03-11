@@ -370,14 +370,9 @@ class DataView:
                                              offvalue=False, variable=self.ascSort)
         QuantitySortButton.place(x=675, y=300)
 
-<<<<<<< HEAD
-        SearchButton = ttk.Button(root, text="Search", width=15, command=search)
-        SearchButton.place(x=700, y=400)
-=======
         SearchButton = ttk.Button(root, text="Search", width=15, command=fetchData)
         SearchButton.place(x=675, y=350)
 
->>>>>>> b08a9a3e2be6de8cb8f91c8563116e086b819d29
 
         exportButton = ttk.Button(root, text="Export data", width=15, command=export)
         exportButton.place(x=675, y=420)
