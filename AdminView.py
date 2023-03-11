@@ -168,9 +168,12 @@ class FBView:
                      "Saturday": (StimeOpen.getTime(), StimeClose.getTime()),
                      "Sunday": (UtimeOpen.getTime(), UtimeClose.getTime())
                      }
-            print(times)
 
             phone_number = PhoneNumInput.get()
+            if not self.checkPhoneNum(phone_number):
+                messagebox.showerror("ERROR", "Invalid phone number. Must be formated as (XXX) XXX-XXXX")
+                return
+
             neighborhood = NeighborhoodInput.get()
             FBName = FBNameInput.get()
             units = "lbs"
@@ -295,6 +298,22 @@ class FBView:
         # TODO show fb hours database
 
         newFBScreen.mainloop()
+
+    "expecting (XXX) XXX-XXXX"
+    def checkPhoneNum(self, num):
+        if len(num) != 14: return False
+        for i in range(14):
+            if i == 0:
+                if num[i] != "(": return False
+            elif i == 4:
+                if num[i] != ")": return False
+            elif i == 5:
+                if num[i] != " ": return False
+            elif i == 9:
+                if num[i] != "-": return False
+            elif not num[i].isdigit():
+                return False
+        return True
 
 
 class DataView:
