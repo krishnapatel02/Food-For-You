@@ -369,7 +369,7 @@ class StaffGUI:
         use_theme(root)
 
         #-----------------------------setting up background---------------------------------------
-        global fetchData
+        global fetchData #set fetchData functiont o be global so screen can be refreshed by any class
         #structured to catch errors if user does not have background images,
             # allows the user to run the program without bg images
         try:
@@ -382,56 +382,56 @@ class StaffGUI:
         except Exception as e:
             print(e)
 
-        root.configure(background='white')
+        root.configure(background='white') #set background to white
 
-        def onClose():
-            connection.close()
-            root.destroy()
+        def onClose(): #override built in close function in Tkinter so connection is terminated to prevent memory leaks on SQL database side.
+            connection.close() #close the connection
+            root.destroy() #destory the main window
 
         #-------------------------- item modification functions ---------------------------------------------
         def fetchData():
-            search()
-            rows = cursor.fetchall()
+            search() #call search function to store all entries in cursor
+            rows = cursor.fetchall() #set rows from cursor
 
             # Delete the old table and insert each row in the current database to accomplish refresh
             if rows != 0:
                 table.delete(*table.get_children())
 
-                for row in rows:
+                for row in rows: #populate table with new entries
                     table.insert('', END, values=row)
 
         def search():
-            item = ItemSearch.get()
-            locationBool = True
-            itemBool = True
-            location = LocationFilter.get()
-            ascending = self.ascSort.get()
-            if (location == "None" or location == ""):
+            item = ItemSearch.get() #get item name from search box
+            locationBool = True #initialize location bool to true 
+            itemBool = True #initialize item bool to true
+            location = LocationFilter.get() #initialize location variable from dropdown
+            ascending = self.ascSort.get() #set bool for ascending search
+            if (location == "None" or location == ""): #if location is None or empty set bool to false
                 locationBool = False
-            if (item.strip() == ""):
+            if (item.strip() == ""): #if item is empty set bool to false
                 itemBool = False
-            if (locationBool and itemBool and ascending):
+            if (locationBool and itemBool and ascending): #if location, item, and ascending is specified, select by locaiton, item, and sort ascending
                 cursor.execute(
                     f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}' and fb.location = '{location}' order by fi.Quantity ASC")
-            elif (locationBool and ascending):
+            elif (locationBool and ascending): #if location and ascending search is  specified select all  items with location and sort by ascending from database.
                 cursor.execute(
                     f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fb.location = '{location}' order by fi.Quantity ASC")
-            elif (itemBool and ascending):
+            elif (itemBool and ascending): #if item and ascending search is  specified select all  items with specific item and sort by ascending from database.
                 cursor.execute(
                     f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}' order by fi.Quantity ASC")
-            elif (itemBool and locationBool):
+            elif (itemBool and locationBool): #if item and locaiton search are specified select all foods with specific name and location from database
                 cursor.execute(
                     f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}' and fb.location = '{location}'")
-            elif (itemBool):
+            elif (itemBool): #if item is specified search all items matching item name from database
                 cursor.execute(
                     f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}'")
-            elif (locationBool):
+            elif (locationBool): #if location search is specified  search all items from database with that location
                 cursor.execute(
                     f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fb.location = '{location}'")
-            elif (ascending):
+            elif (ascending): #if ascending sort all items by ascending
                 cursor.execute(
                     f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) order by fi.quantity ASC")
-            else:
+            else: #if no filters specified select all from the table
                 cursor.execute(
                     f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id)")
 
@@ -515,10 +515,10 @@ class StaffGUI:
         root.mainloop()
 
 
-connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
+connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou") #create connection to database using function from utilffy.py
 #connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
-cursor = connection.cursor()
+cursor = connection.cursor() #initialize cursor to database
 
 
 
-StaffGUI()
+StaffGUI() #start tkinter interface
