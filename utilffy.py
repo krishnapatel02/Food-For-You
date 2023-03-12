@@ -7,7 +7,11 @@ font = "Helvetica"
 searchInputSize = "9"
 regFontSize = "11"
 
-port = 3079     #holds the database port number
+port = 3441     #holds the database port number
+user = "jerryp"
+password = "111"
+host = "ix-dev.cs.uoregon.edu"
+database = "foodforyou"
 
 def use_theme(window:Tk):
     """ use_theme(window)
@@ -50,7 +54,7 @@ def fetchCategory(cursor):
             categories.append(col)
     return categories
 
-def connectToDatabase(user, password, host, port, database):
+def connectToDatabase():
     """ connectToDatabase(user, password, host, port, database)
     user: username
     password: user's password

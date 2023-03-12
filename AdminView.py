@@ -28,11 +28,11 @@ import os
 import datetime
 
 
-FBconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", port, "foodforyou")
+FBconnection = connectToDatabase()
 #FBconnection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
 FBcursor = FBconnection.cursor()
 
-Dconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", port, "foodforyou")
+Dconnection = connectToDatabase()
 #Dconnection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
 Dcursor = Dconnection.cursor()
 

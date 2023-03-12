@@ -518,7 +518,7 @@ class StaffGUI:
         root.mainloop()
 
 
-connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", port, "foodforyou") #create connection to database using function from utilffy.py
+connection = connectToDatabase() #create connection to database using function from utilffy.py
 #connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
 cursor = connection.cursor() #initialize cursor to database
 
