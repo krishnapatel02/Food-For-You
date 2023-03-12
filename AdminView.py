@@ -208,66 +208,69 @@ class FBView:
                      "Sunday": (UtimeOpen.getTime(), UtimeClose.getTime())
                      }
             openTimes = compareTimes(times)        #keeps the days which are open (omits times with open == end)
+            if(openTimes != [""]*14): #If we get back an empty list of 14 items, there are no open days. This is an error.
+                phone_number = PhoneNumInput.get()                      #holds the user inputted phone number
+                if not self.checkPhoneNum(phone_number):                #validates its of correct format
+                    messagebox.showerror("ERROR", "Invalid phone number. Must be formatted as (XXX) XXX-XXXX")
+                    return
 
-            phone_number = PhoneNumInput.get()                      #holds the user inputted phone number
-            if not self.checkPhoneNum(phone_number):                #validates its of correct format
-                messagebox.showerror("ERROR", "Invalid phone number. Must be formatted as (XXX) XXX-XXXX")
-                return
+                neighborhood = NeighborhoodInput.get()              #holds the user inputted neighborhood
+                FBName = FBNameInput.get()                          #holds the user inputter food bank name
+                FBcursor.execute(f"select MAX(fb.fb_ID) from food_bank fb")     #grabs max exisiting food bank id
+                maxfb_ID = FBcursor.fetchall()                                  #holds such above
+                FBcursor.execute(f"select MAX(fi.fd_ID) from food_item fi")     #grabs max exisiting food item id
+                maxfd_ID = FBcursor.fetchall()                                  #holds such above
+                if (maxfd_ID != []):   #creates a new id for the new food bank
+                    maxfd_ID = int(maxfd_ID[0][0]) + 1
+                else:                                       # if no existing food bank already
+                    maxfd_ID = 1
+                newfb_ID = None
+                if (maxfb_ID != []):     #creates a new id for the new food item
+                    newfb_ID = int(maxfb_ID[0][0]) + 1
+                else:                   # if no existing food item already
+                    newfb_ID = 1
+                FBcursor.execute(f"select * from food_bank fb where fb.Location = '{FBName}'")  #pulls existing food banks with such name
+                locationCheck = FBcursor.fetchall()
+                FBcursor.execute(f"select * from food_bank fb where fb.Address = '{newloc}'")   #pulls existing food banks with such address
+                addressCheck = FBcursor.fetchall()
+                if(openTimes != None):
+                    if (locationCheck == [] and addressCheck == []):
+                        FBcursor.execute(f"insert into foodforyou.food_bank values('{FBName}', " + \
+                                        f"'{newloc}', '{neighborhood}', '{phone_number}', '{newfb_ID}')")
+                        FBcursor.execute(
+                            f"insert into foodforyou.hours values ('{newfb_ID}', '{openTimes[0]}', '{openTimes[1]}'," + \
+                            f"'{openTimes[2]}', '{openTimes[3]}','{openTimes[4]}', '{openTimes[5]}'," + \
+                            f"'{openTimes[6]}', '{openTimes[7]}','{openTimes[8]}', '{openTimes[9]}'," + \
+                            f"'{openTimes[10]}', '{openTimes[11]}','{openTimes[12]}', '{openTimes[13]}')")
+                        nonlocal filedata
+                        for line in filedata:
+                            item_name = line[0]
+                            category = line[1]
+                            quantity = int(line[2])
+                            # units = line[3]
+                            FBcursor.execute(f"select * from food_item fi where fi.Item_name='{item_name}' and fi.units = '{units}' and fi.category = '{category}' and fi.location = '{FBName}'")
+                            duplicateCheck = FBcursor.fetchall()
+                            #print(duplicateCheck)
+                            if(duplicateCheck==[]):
+                                FBcursor.execute(
+                                    f"insert into foodforyou.food_item values ('{item_name}', '{category}', {quantity}, '{units}', '{FBName}', {int(newfb_ID)}, {maxfd_ID})")
+                                maxfd_ID += 1
+                            else:
+                                duplicateID = duplicateCheck[0][6]
+                                insertQuantity = quantity+int(duplicateCheck[0][2])
+                                FBcursor.execute(
+                                    f"update foodforyou.food_item set Quantity={insertQuantity} where fd_ID = {duplicateID}"
+                                )
 
-            neighborhood = NeighborhoodInput.get()              #holds the user inputted neighborhood
-            FBName = FBNameInput.get()                          #holds the user inputter food bank name
-            FBcursor.execute(f"select MAX(fb.fb_ID) from food_bank fb")     #grabs max exisiting food bank id
-            maxfb_ID = FBcursor.fetchall()                                  #holds such above
-            FBcursor.execute(f"select MAX(fi.fd_ID) from food_item fi")     #grabs max exisiting food item id
-            maxfd_ID = FBcursor.fetchall()                                  #holds such above
-            if (maxfd_ID != []):   #creates a new id for the new food bank
-                maxfd_ID = int(maxfd_ID[0][0]) + 1
-            else:                                       # if no existing food bank already
-                maxfd_ID = 1
-            newfb_ID = None
-            if (maxfb_ID != []):     #creates a new id for the new food item
-                newfb_ID = int(maxfb_ID[0][0]) + 1
-            else:                   # if no existing food item already
-                newfb_ID = 1
-            FBcursor.execute(f"select * from food_bank fb where fb.Location = '{FBName}'")  #pulls existing food banks with such name
-            locationCheck = FBcursor.fetchall()
-            FBcursor.execute(f"select * from food_bank fb where fb.Address = '{newloc}'")   #pulls existing food banks with such address
-            addressCheck = FBcursor.fetchall()
-            if(openTimes != None):
-                if (locationCheck == [] and addressCheck == []):
-                    FBcursor.execute(f"insert into foodforyou.food_bank values('{FBName}', " + \
-                                    f"'{newloc}', '{neighborhood}', '{phone_number}', '{newfb_ID}')")
-                    FBcursor.execute(
-                        f"insert into foodforyou.hours values ('{newfb_ID}', '{openTimes[0]}', '{openTimes[1]}'," + \
-                        f"'{openTimes[2]}', '{openTimes[3]}','{openTimes[4]}', '{openTimes[5]}'," + \
-                        f"'{openTimes[6]}', '{openTimes[7]}','{openTimes[8]}', '{openTimes[9]}'," + \
-                        f"'{openTimes[10]}', '{openTimes[11]}','{openTimes[12]}', '{openTimes[13]}')")
-                    nonlocal filedata
-                    for line in filedata:
-                        item_name = line[0]
-                        category = line[1]
-                        quantity = int(line[2])
-                        # units = line[3]
-                        FBcursor.execute(f"select * from food_item fi where fi.Item_name='{item_name}' and fi.units = '{units}' and fi.category = '{category}' and fi.location = '{FBName}'")
-                        duplicateCheck = FBcursor.fetchall()
-                        #print(duplicateCheck)
-                        if(duplicateCheck==[]):
-                            FBcursor.execute(
-                                f"insert into foodforyou.food_item values ('{item_name}', '{category}', {quantity}, '{units}', '{FBName}', {int(newfb_ID)}, {maxfd_ID})")
-                            maxfd_ID += 1
-                        else:
-                            duplicateID = duplicateCheck[0][6]
-                            insertQuantity = quantity+int(duplicateCheck[0][2])
-                            FBcursor.execute(
-                                f"update foodforyou.food_item set Quantity={insertQuantity} where fd_ID = {duplicateID}"
-                            )
-
-                    FBconnection.commit()
-                    fetchData(newfb_ID)
+                        FBconnection.commit()
+                        fetchData(newfb_ID)
+                    else:
+                        messagebox.showerror("ERROR", "Food bank with this name or address appears to already exist.")
                 else:
-                    messagebox.showerror("ERROR", "Food bank with this name or address appears to already exist.")
+                    messagebox.showerror("ERROR", "One of the open times is after the close time.")
             else:
-                messagebox.showerror("ERROR", "One of the open times is after the close time.")
+                messagebox.showerror("ERROR", "The food bank times are all closed, a food bank must have at least one open day to be added.")
+                #Error message for always closed food bank
 
             # closes screen
             newFBScreen.destroy()
