@@ -218,91 +218,97 @@ class UpdateItem:
             cursor.execute(f"select fb.fb_id from food_bank fb where fb.Location = '{location}'") #obtain the food bank id of the location from the database.
             fb_id = [int(i[0]) for i in cursor.fetchall()][0] #store the food bank ID in a variable
             if (operation == 'update'): #if the update operation is specified execute code below
-                if (int(quantityinput.get()) < 0): #verify quantity to be updated is non-negative
-                    messagebox.showerror("ERROR", "Quantity must be non-negative") #show message if quantity is negative
-                else: #continue if quantity is correct
-                    currentfb_id = fb_id #set new var for fb_id
-                    cursor.execute(
-                        f"select * from food_item fi where fi.Item_name='{item}' and fi.fb_id={currentfb_id} and fi.units = '{units}'") #select all columns for food item matching input from database
-                    origEntry = cursor.fetchall()[0] #set database result to variable
-                    origQuantity = origEntry[2] #set variable for original quantity
-
-                    cursor.execute(
-                        f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{quantityinput.get()}', Units='{unitsInput.get()}', Location='{location}', fb_id='{currentfb_id}' where fd_ID='{int(food_id)}'")
-                        #update entry in food_item table to set quantity of current food item to its new quantity
-                    if (int(quantityinput.get()) < origQuantity): #if the quantity set in the database was less than original record it to the outgoing database for record keeping
+                if(quantityinput.get().isdigit()):
+                    if (int(quantityinput.get()) < 0): #verify quantity to be updated is non-negative
+                        messagebox.showerror("ERROR", "Quantity must be non-negative") #show message if quantity is negative
+                    else: #continue if quantity is correct
+                        currentfb_id = fb_id #set new var for fb_id
                         cursor.execute(
-                            f"select * from outgoing o where o.Item_name='{item}' and o.fb_ID={fb_id} and o.fd_ID={food_id}") #select item if it exists in the outgoing database
-                        outgoingEntry = cursor.fetchall() #store in variable
-                        if (outgoingEntry != []): #if the entry is not empty we will update it 
+                            f"select * from food_item fi where fi.Item_name='{item}' and fi.fb_id={currentfb_id} and fi.units = '{units}'") #select all columns for food item matching input from database
+                        origEntry = cursor.fetchall()[0] #set database result to variable
+                        origQuantity = origEntry[2] #set variable for original quantity
+
+                        cursor.execute(
+                            f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{quantityinput.get()}', Units='{unitsInput.get()}', Location='{location}', fb_id='{currentfb_id}' where fd_ID='{int(food_id)}'")
+                            #update entry in food_item table to set quantity of current food item to its new quantity
+                        if (int(quantityinput.get()) < origQuantity): #if the quantity set in the database was less than original record it to the outgoing database for record keeping
                             cursor.execute(
-                                f"update foodforyou.outgoing set Quantity={int(outgoingEntry[0][2]) + origQuantity - int(quantityinput.get())} where fd_ID='{int(food_id)}'") #increment quantity in outgoing table
-                        else:
-                            cursor.execute(
-                                f"insert into foodforyou.outgoing (Item_name, Category, Quantity, Units, Location, fb_ID, fd_ID) values ('{item}', '{origEntry[1]}', {origQuantity - int(quantityinput.get())}, '{origEntry[3]}', '{origEntry[4]}', {int(origEntry[5])}, {int(origEntry[6])})")
-                            #if the entry is not in the table, insert it 
-                    connection.commit() #commit the connection, so the insertions are written to disk inthe database
-                    messagebox.showinfo("Success", "Quantity successfully updated.") #show a message showing success
+                                f"select * from outgoing o where o.Item_name='{item}' and o.fb_ID={fb_id} and o.fd_ID={food_id}") #select item if it exists in the outgoing database
+                            outgoingEntry = cursor.fetchall() #store in variable
+                            if (outgoingEntry != []): #if the entry is not empty we will update it 
+                                cursor.execute(
+                                    f"update foodforyou.outgoing set Quantity={int(outgoingEntry[0][2]) + origQuantity - int(quantityinput.get())} where fd_ID='{int(food_id)}'") #increment quantity in outgoing table
+                            else:
+                                cursor.execute(
+                                    f"insert into foodforyou.outgoing (Item_name, Category, Quantity, Units, Location, fb_ID, fd_ID) values ('{item}', '{origEntry[1]}', {origQuantity - int(quantityinput.get())}, '{origEntry[3]}', '{origEntry[4]}', {int(origEntry[5])}, {int(origEntry[6])})")
+                                #if the entry is not in the table, insert it 
+                        connection.commit() #commit the connection, so the insertions are written to disk inthe database
+                        messagebox.showinfo("Success", "Quantity successfully updated.") #show a message showing success
+                else:
+                    messagebox.showerror("ERROR", "Quantity must be an integer.")
 
             elif (operation == 'move'): #if the move operation is specified execute code below
                 cursor.execute(f"select fi.Quantity from food_item fi where fi.fd_id = '{food_id}'") #select quantity for food_item
                 origQuantity = [int(i[0]) for i in cursor.fetchall()][0] #store quantity in variable
-                moveQuantity = int(quantityinput.get()) #get the quantity to move and store in variable
+                moveQuantity = (quantityinput.get()) #get the quantity to move and store in variable
+                if(moveQuantity.isdigit()):
+                    moveQuantity = int(moveQuantity)
+                    if (moveQuantity > origQuantity): # check if move quantity is greater than available
+                        messagebox.showerror("ERROR", "The move quantity cannot be greater than the current quantity") #show error if it is
+                    elif (moveQuantity < 0): #move quantity cannot be less than 0
+                        messagebox.showerror("ERROR", "The move quantity cannot be negative") #show error if less than 0
+                    elif (locationDD.get() == "None" or locationDD.get() == ""): #Location cannot be None or empty
+                        messagebox.showerror("Operation Cancelled", "Move location was none.") #show error
+                    elif (locationDD.get() == location): #Cannot move to the same location
+                        messagebox.showerror("Location cannot be the same.", "Select a different location.")
+                    else:
+                        cursor.execute(f"select fb.fb_id from food_bank fb where fb.Location = '{locationDD.get()}'") #get food bank ID for move location
+                        movefb_id = [int(i[0]) for i in cursor.fetchall()][0] #store food bank ID in varaible
+                        cursor.execute(
+                            f"select * from food_item fi where fi.Item_name='{item}' and fi.units = '{units}' and fi.fb_id={movefb_id}") #select all columns for current item in move location
+                        itemCheck = cursor.fetchall() #store in variable
+                        # print(a)
+                        if (itemCheck != []): #if the item exists in the move location itemCheck will not be empty
+                            item2 = itemCheck[0] #set item to variable
+                            cursor.execute(f"select * from food_item fi where fi.Item_name='{item}' and fi.fb_id={fb_id}") #select all columns for current item in current location 
+                            item1 = cursor.fetchall()[0] #set current location item to variable
+                            if (compareItems(item1, item2)): #verify that both items are the same
+                                cursor.execute(
+                                    f"select fi.fd_id from food_item fi join food_bank fb using (fb_id) where fb_id = '{movefb_id}' and fi.Item_name = '{iteminput.get()}'") #select food item ID if item exists
+                                newFoodID = [int(i[0]) for i in cursor.fetchall()][0] #store food_item id
+                                cursor.execute(f"select fi.Quantity from food_item fi where fi.fd_id = '{newFoodID}'") #select quantity for moved food item
+                                existingNewQuantity = [int(i[0]) for i in cursor.fetchall()][0] #store existing move quantity to variable
+                                updateQuantity = moveQuantity + existingNewQuantity #add to location being moved to, so set to variable
+                                currentItemUpdateQuantity = origQuantity - moveQuantity #set variable for update to current location
+                                cursor.execute(
+                                    f"update foodforyou.food_item set Quantity='{currentItemUpdateQuantity}' where fd_ID='{int(food_id)}'") #write new quantity to database for current location
+                                cursor.execute(
+                                    f"update foodforyou.food_item set Quantity='{updateQuantity}' where fd_ID='{int(newFoodID)}'") #write new quantity for moved location
 
-                if (moveQuantity > origQuantity): # check if move quantity is greater than available
-                    messagebox.showerror("ERROR", "The move quantity cannot be greater than the current quantity") #show error if it is
-                elif (moveQuantity < 0): #move quantity cannot be less than 0
-                    messagebox.showerror("ERROR", "The move quantity cannot be negative") #show error if less than 0
-                elif (locationDD.get() == "None" or locationDD.get() == ""): #Location cannot be None or empty
-                    messagebox.showerror("Operation Cancelled", "Move location was none.") #show error
-                elif (locationDD.get() == location): #Cannot move to the same location
-                    messagebox.showerror("Location cannot be the same.", "Select a different location.")
+                                connection.commit() # write database updates to disk 
+                                messagebox.showinfo("Success", "Quantity successfully moved.") #display message indicating success
+                            else: #if both items are not the same, show an error
+                                messagebox.showerror("ERROR", "The items are not the same. Check units and category.")
+                        else:#if item does not exist in location being moved to, insert it
+                            cursor.execute(f"select fb.fb_id from food_bank fb where fb.Location = '{locationDD.get()}'") #get food bank id for move location
+                            movefb_id = [int(i[0]) for i in cursor.fetchall()][0] #store move location ID in variable
+                            cursor.execute(f"select * from food_item fi where fi.Item_name='{item}' and fi.fb_id={fb_id}") #select all columns for item at current location
+                            item1 = cursor.fetchall()[0] #store item in variable
+                            cursor.execute(f"select MAX(fi.fd_ID) from food_item fi") #find max food_item ID to create unique ID
+                            temp = cursor.fetchall() #store in temp var
+                            key = 1 #initialize key to 1
+                            if (temp != []): #if no IDs exist, 1 will be used to start table
+                                key = int(temp[0][0]) + 1 #covert maxID to int and increment by 1 to get new unique ID
+                            newQuantity = origQuantity - moveQuantity #store new quantity for current location in variable
+                            cursor.execute(
+                                    f"update foodforyou.food_item set Quantity='{newQuantity}' where fd_ID='{int(food_id)}'") #update quantity for current location 
+                            cursor.execute(
+                                f"insert into foodforyou.food_item values ('{item}', '{item1[1]}', {moveQuantity}, '{units}', '{locationDD.get()}', {int(movefb_id)}, {key})"
+                            ) #insert quantity for move location
+
+                            messagebox.showinfo("Item does not exist", "The item did not exist in the food bank it was being moved to an entry was created automatically") #indicate success, and addition of new item
                 else:
-                    cursor.execute(f"select fb.fb_id from food_bank fb where fb.Location = '{locationDD.get()}'") #get food bank ID for move location
-                    movefb_id = [int(i[0]) for i in cursor.fetchall()][0] #store food bank ID in varaible
-                    cursor.execute(
-                        f"select * from food_item fi where fi.Item_name='{item}' and fi.units = '{units}' and fi.fb_id={movefb_id}") #select all columns for current item in move location
-                    itemCheck = cursor.fetchall() #store in variable
-                    # print(a)
-                    if (itemCheck != []): #if the item exists in the move location itemCheck will not be empty
-                        item2 = itemCheck[0] #set item to variable
-                        cursor.execute(f"select * from food_item fi where fi.Item_name='{item}' and fi.fb_id={fb_id}") #select all columns for current item in current location 
-                        item1 = cursor.fetchall()[0] #set current location item to variable
-                        if (compareItems(item1, item2)): #verify that both items are the same
-                            cursor.execute(
-                                f"select fi.fd_id from food_item fi join food_bank fb using (fb_id) where fb_id = '{movefb_id}' and fi.Item_name = '{iteminput.get()}'") #select food item ID if item exists
-                            newFoodID = [int(i[0]) for i in cursor.fetchall()][0] #store food_item id
-                            cursor.execute(f"select fi.Quantity from food_item fi where fi.fd_id = '{newFoodID}'") #select quantity for moved food item
-                            existingNewQuantity = [int(i[0]) for i in cursor.fetchall()][0] #store existing move quantity to variable
-                            updateQuantity = moveQuantity + existingNewQuantity #add to location being moved to, so set to variable
-                            currentItemUpdateQuantity = origQuantity - moveQuantity #set variable for update to current location
-                            cursor.execute(
-                                f"update foodforyou.food_item set Quantity='{currentItemUpdateQuantity}' where fd_ID='{int(food_id)}'") #write new quantity to database for current location
-                            cursor.execute(
-                                f"update foodforyou.food_item set Quantity='{updateQuantity}' where fd_ID='{int(newFoodID)}'") #write new quantity for moved location
-
-                            connection.commit() # write database updates to disk 
-                            messagebox.showinfo("Success", "Quantity successfully moved.") #display message indicating success
-                        else: #if both items are not the same, show an error
-                            messagebox.showerror("ERROR", "The items are not the same. Check units and category.")
-                    else:#if item does not exist in location being moved to, insert it
-                        cursor.execute(f"select fb.fb_id from food_bank fb where fb.Location = '{locationDD.get()}'") #get food bank id for move location
-                        movefb_id = [int(i[0]) for i in cursor.fetchall()][0] #store move location ID in variable
-                        cursor.execute(f"select * from food_item fi where fi.Item_name='{item}' and fi.fb_id={fb_id}") #select all columns for item at current location
-                        item1 = cursor.fetchall()[0] #store item in variable
-                        cursor.execute(f"select MAX(fi.fd_ID) from food_item fi") #find max food_item ID to create unique ID
-                        temp = cursor.fetchall() #store in temp var
-                        key = 1 #initialize key to 1
-                        if (temp != []): #if no IDs exist, 1 will be used to start table
-                            key = int(temp[0][0]) + 1 #covert maxID to int and increment by 1 to get new unique ID
-                        newQuantity = origQuantity - moveQuantity #store new quantity for current location in variable
-                        cursor.execute(
-                                f"update foodforyou.food_item set Quantity='{newQuantity}' where fd_ID='{int(food_id)}'") #update quantity for current location 
-                        cursor.execute(
-                            f"insert into foodforyou.food_item values ('{item}', '{item1[1]}', {moveQuantity}, '{units}', '{locationDD.get()}', {int(movefb_id)}, {key})"
-                        ) #insert quantity for move location
-
-                        messagebox.showinfo("Item does not exist", "The item did not exist in the food bank it was being moved to an entry was created automatically") #indicate success, and addition of new item
+                    messagebox.showerror("ERROR", "Quantity must be an integer.")
             elif (operation == 'delete'): #if operation is delete do code below
                 cursor.execute(f"delete from food_item where fd_id = {food_id}") #delete all columns matching current food id
                 connection.commit() #commit changes to disk
