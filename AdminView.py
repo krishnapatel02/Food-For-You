@@ -448,7 +448,7 @@ class DataView:
 
         def fetchData():
             search() #call search function to store all entries in cursor
-            rows = cursor.fetchall() #set rows from cursor
+            rows = Dcursor.fetchall() #set rows from cursor
 
             # Delete the old table and insert each row in the current database to accomplish refresh
             if rows != 0:
@@ -572,7 +572,7 @@ root = Tk()                 #creates Tkinter window
 root.protocol("WM_DELETE_WINDOW", onClose)  #sets the window's closing function to onClose()
 root.geometry('900x540')                    #set geometry of screen
 tabControl = ttk.Notebook(root)             #creates "tabs" widget
-use_theme(root)                             #use theme for screen to applied to widgets
+use_theme(root, "9")                             #use theme for screen to applied to widgets
 
 tab1 = FBView(root).root                    #sets food bank view frame as a tab
 tabControl.add(tab1, text="Food Banks")

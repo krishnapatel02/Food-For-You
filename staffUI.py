@@ -201,10 +201,12 @@ class UpdateItem:
         locationDD = ttk.Combobox(screen, values=self.locations, font=(font, 8),state="readonly")
 
         #allow users to save their changes
+        fillerlbl = ttk.Label(screen)
+
         submitButton = ttk.Button(screen, text="Save changes", width=15)
         submitButton.place(x=(self.swidth) / 2 - 60, y=250)
 
-        fillerlbl = ttk.Label(screen)
+
         movelbl = ttk.Label(screen, text="location to move items to")
 
 
@@ -393,7 +395,7 @@ class StaffGUI:
         self.root.geometry(f'{self.screenWidth}x540')
         self.ascSort = BooleanVar()
         self.locations = fetchLocations(cursor)         #grab exisiting locations
-        use_theme(root)
+        use_theme(root, "9")
 
         #-----------------------------setting up background---------------------------------------
         global fetchData #set fetchData functiont o be global so screen can be refreshed by any class
