@@ -3,7 +3,8 @@ Name: AdminView.py
 Created: 3/5/2023
 Authors: Katherine Smirnov, Krishna Patel
 
-Provides a view of the food bank log, and allows for a new food bank insertion to the database.
+Provides a view of the Outgoing database with searching/filtering functionality,
+and allows for a new food bank insertion to the Food Bank database.
 
 Modifications:
     3/5/2023: Created validateFile() to check for headers and quantity -KS
@@ -16,9 +17,19 @@ Modifications:
     3/11/2023: Add neighborhood and phone number input to newFB -KS
                Added validate phone number function -KS
 
+Databases uses:
+    TODO check this
+    Outgoing
+    Food Banks
+    Food Items
+
 References:
     EasyA, admin.py from Jerry Pi
         -Recycled code to display database in table and update items from data to database
+
+Notes:
+    Abbreviations:
+        - FB: Food Bank
 """
 from utilffy import *
 from tkinter import filedialog
@@ -43,38 +54,35 @@ class FBView:
     def __init__(self, parent):
         #----------------------setting up screen for "New Food Bank"---------
         self.root = Frame(parent, bg="white")
-        root = self.root
 
         global fetchData
 
-        def fetchData(newFBID):
-            search(newFBID)
-            rows = FBcursor.fetchall()
+        def fetchData(newFBID:int):
+            """
+                Grabs data in database of the newly inserted food bank, and places in table
+                Input: newFBID is the new food bank
+            """
+            FBcursor.execute(                   # selects all rows/columns from food item database with the food bank location which is known from the new FB ID
+                f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fb.fb_id = {newFBID}")
+            rows = FBcursor.fetchall()          # grabs data TODO
 
             # Delete the old table and insert each row in the current database to accomplish refresh
             if rows != 0:
                 table.delete(*table.get_children())
-
                 for row in rows:
                     table.insert('', END, values=row)
 
-        def search(newFBID):
-            """search(newFBID)"""
-            print(type(newFBID))
-            FBcursor.execute(
-                f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fb.fb_id = {newFBID}")
-
         #================== user widgets =============================================================
-        AddFBButton = ttk.Button(root, text="New Food Bank +", width=20, command=self.addFB)
+        AddFBButton = ttk.Button(self.root, text="New Food Bank +", width=20, command=self.addFB)
         AddFBButton.place(x=675, y=200)
 
         #================== view table from database ==================================================
             # (credit due to Jerry Pi)
-        viewFrame = Frame(root, bd=5, relief='ridge', bg='wheat')   #frame to hold the table
+        viewFrame = Frame(self.root, bd=5, relief='ridge', bg='wheat')   #frame to hold the table
         viewFrame.place(x=30, y=110, width=600, height=350)
         xScroll = Scrollbar(viewFrame, orient=HORIZONTAL)   #allows the user to scroll
         yScroll = Scrollbar(viewFrame, orient=VERTICAL)
-        table = ttk.Treeview(viewFrame, columns=(
+        table = ttk.Treeview(viewFrame, columns=(           #sets up the table
             'item_to_filter', 'quantity_to_filter', 'units', 'fid_to_filter', 'location_to_filter'),
                              xscrollcommand=xScroll.set,
                              yscrollcommand=yScroll.set)
@@ -105,20 +113,25 @@ class FBView:
         """
         filedata = []                        # holds data from file upload
         imported_filename = StringVar()  # holds name of file uploaded, used as a textvariable in a label
-        def compareTimes(timeDict:dict):
-            """TODO"""
-            keys = timeDict.keys()
-            formattedTime = []
-            for key in keys:
-                time = timeDict[key]
-                if(time[0] == time[1]):
+        def compareTimes(timeDict:dict)->list:
+            """
+                Validates open time is less than close time for a day. If the two times are equal,
+                they are omitted
+                Input: timeDict is the dictionary of times of format {"str": (datetime.time, datetime,time), ....}
+                Returns: List of start end times, from increasing order of timeDict's keys
+            """
+            keys = timeDict.keys()  #holds days of timeDict
+            formattedTime = []      #holds return value to be append to
+            for key in keys:        #for each day
+                time = timeDict[key]            #grab the times of such day
+                if(time[0] == time[1]):         #if open and end times are equal
+                    formattedTime.append('')    #omit, appends an empty string
                     formattedTime.append('')
-                    formattedTime.append('')
-                elif(time[0] < time[1]):
-                    formattedTime.append(str(time[0]))
-                    formattedTime.append(str(time[1]))
-                else:
-                    formattedTime = None
+                elif(time[0] < time[1]): # validates that the open time is before close time
+                    formattedTime.append(str(time[0]))      #appends valid start
+                    formattedTime.append(str(time[1]))              #and end time
+                else:   #error catching: close time is before open time
+                    formattedTime = None        #appends nothing -> will check in other functions if len(formattedTime) is correct
                     break
             return formattedTime
 
@@ -132,7 +145,7 @@ class FBView:
             """
             try:
                 # ---------- checking headers -------------
-                file = open(filepath, 'r')
+                file = open(filepath, 'r')       #read the file given
                 expected = ["item", "category", "quantity", "units"] #columns of csv must match
 
                 dict_from_csv = list(csv.DictReader(file))          #turns csv into dictionary
@@ -140,6 +153,7 @@ class FBView:
                     messagebox.showerror("File error", "Incorrect headers: expected 'item', 'category', 'quantity', 'units'")
                     return False
 
+                #through every row in the csv file
                 for i, item in enumerate(dict_from_csv):
                     # ---------- validate quantity -------------
                     quant = item['quantity']
@@ -147,26 +161,31 @@ class FBView:
                     # checks if integer and non-negative
                         # isdigit() also returns false if digit is negative
                     if not (quant.isdigit()):
+                        #shows which row was incorrect
                         messagebox.showerror("File error", "Invalid quantity (" + quant + ") on row " + str(i + 2))
+                            #str(i+2): adds two since csv indices starts at 2 due to headers and difference in start index
                         return False
 
                     # -------- checking for empty rows -----------
                     if (not item['item']) or (not item['category']) or (not item['quantity']) or (not item['units']):
+                        #shows which row is empty
                         messagebox.showerror("File error", "Empty values row " + str(i + 2))
                         return False
 
                 #turns dict_from_csv into a 2D-list (more readable for inserting to database)
                 dict_to_list= []
                 for x in dict_from_csv:
-                    i, c, q, u = x.values()
+                    i, c, q, u = x.values()     #unpack dict_from_csv values
                     # each row of dict_to_list is a row of the csv file
                     dict_to_list.append((i, c, q, u))
                 nonlocal filedata
+                #sets the uploaded data to the global variable
                 filedata = dict_to_list
                 return True
 
             except Exception as e:
                 print("Error:", e)
+                #if error errors that is not already checked for
                 messagebox.showerror("File error",
                                      "Having trouble uploading file. Please ensure the file uploaded is a CSV with the columns 'item', 'category' and 'quantity'")
 
@@ -255,28 +274,31 @@ class FBView:
                         nonlocal filedata
                         # imports data from file to Food Item database
                         for line in filedata:
+                            # grabs row from data from csv -> will become a new entry in database
                             item_name = line[0]
                             category = line[1]
                             quantity = int(line[2])
                             units = line[3]
+
                             FBcursor.execute(f"select * from food_item fi where fi.Item_name='{item_name}' and fi.units = '{units}' and fi.category = '{category}' and fi.location = '{FBName}'")
-                                    #checks
+                                    #checks by (union by item_name, units, category, FBName)
                             duplicateCheck = FBcursor.fetchall()
-                            if(duplicateCheck==[]):
+                            #comibines duplicate food items
+                            if(duplicateCheck==[]):  #no duplicates
                                 FBcursor.execute(
                                     f"insert into foodforyou.food_item values ('{item_name}', '{category}', {quantity}, '{units}', '{FBName}', {int(newfb_ID)}, {maxfd_ID})")
-                                maxfd_ID += 1
+                                maxfd_ID += 1       #creates a new row in data base, -> creates new food item ID
                             else:
-                                duplicateID = duplicateCheck[0][6]
-                                insertQuantity = quantity+int(duplicateCheck[0][2])
-                                FBcursor.execute(
+                                duplicateID = duplicateCheck[0][6]      #merge by item id
+                                insertQuantity = quantity+int(duplicateCheck[0][2])     #merge quantities
+                                FBcursor.execute(       #change quantity of item id
                                     f"update foodforyou.food_item set Quantity={insertQuantity} where fd_ID = {duplicateID}"
                                 )
 
-                        FBconnection.commit()
-                        fetchData(newfb_ID)
-                        newFBScreen.destroy()
-                    else:
+                        FBconnection.commit()       # modifies the database with such changes
+                        fetchData(newfb_ID)         # resets the GUI table
+                        newFBScreen.destroy()       # closes out window
+                    else:       # error checking -> doesn't allow user to change, still views FB screen
                         messagebox.showerror("ERROR", "Food bank with this name or address appears to already exist.")
                         return
                 else:
@@ -333,42 +355,49 @@ class FBView:
         ttk.Label(newFBScreen, text="Expected format: (XXX) XXX-XXXX", font=(font,9), foreground="gray").place(x=300, y=275)
 
         # time picker objects to insert open/closing times for each day of the week
+            #for monday
         ttk.Label(newFBScreen, text="Monday", font=(font, 9)).place(x=75, y=50)
         MtimeOpen = time.App(newFBScreen)       #uses timepicker.py widget
         MtimeOpen.place(x=75, y=75)
         MtimeClose = time.App(newFBScreen)
         MtimeClose.place(x=75, y=100)
 
+            #for tuesday
         ttk.Label(newFBScreen, text="Tuesday", font=(font, 9)).place(x=175, y=50)
         TtimeOpen = time.App(newFBScreen)
         TtimeOpen.place(x=175, y=75)
         TtimeClose = time.App(newFBScreen)
         TtimeClose.place(x=175, y=100)
 
+            #for wednesday
         ttk.Label(newFBScreen, text="Wednesday", font=(font, 9)).place(x=275, y=50)
         WtimeOpen = time.App(newFBScreen)
         WtimeOpen.place(x=275, y=75)
         WtimeClose = time.App(newFBScreen)
         WtimeClose.place(x=275, y=100)
 
+            #for thursday
         ttk.Label(newFBScreen, text="Thursday", font=(font, 9)).place(x=375, y=50)
         RtimeOpen = time.App(newFBScreen)
         RtimeOpen.place(x=375, y=75)
         RtimeClose = time.App(newFBScreen)
         RtimeClose.place(x=375, y=100)
 
+            #for friday
         ttk.Label(newFBScreen, text="Friday", font=(font, 9)).place(x=475, y=50)
         FtimeOpen = time.App(newFBScreen)
         FtimeOpen.place(x=475, y=75)
         FtimeClose = time.App(newFBScreen)
         FtimeClose.place(x=475, y=100)
 
+            #for saturday
         ttk.Label(newFBScreen, text="Saturday", font=(font, 9)).place(x=575, y=50)
         StimeOpen = time.App(newFBScreen)
         StimeOpen.place(x=575, y=75)
         StimeClose = time.App(newFBScreen)
         StimeClose.place(x=575, y=100)
 
+            #for sunday
         ttk.Label(newFBScreen, text="Sunday", font=(font, 9)).place(x=675, y=50)
         UtimeOpen = time.App(newFBScreen)
         UtimeOpen.place(x=675, y=75)
@@ -379,8 +408,8 @@ class FBView:
         submitButton = ttk.Button(newFBScreen, text="Save changes", width=15, command=saveChanges)
         submitButton.place(x=600, y=250)
 
-        newFBScreen.resizable(0, 0)                   #make the window size not adjustable
-        newFBScreen.mainloop()
+        newFBScreen.resizable(0, 0)       #make the window size not adjustable
+        newFBScreen.mainloop()            #display widgets
 
     def checkPhoneNum(self, num:str)->bool:
         """ checkPhoneNum(str)
@@ -388,17 +417,17 @@ class FBView:
             Input: A string containing a phone number
             Output: Return true if of correct format, else returns False.
         """
-        if len(num) != 14: return False
+        if len(num) != 14: return False     #is of correct length
         for i in range(14):
             if i == 0:
-                if num[i] != "(": return False
+                if num[i] != "(": return False  #0th character is (
             elif i == 4:
-                if num[i] != ")": return False
+                if num[i] != ")": return False  #4th character is )
             elif i == 5:
-                if num[i] != " ": return False
+                if num[i] != " ": return False  #5th character is " "
             elif i == 9:
-                if num[i] != "-": return False
-            elif not num[i].isdigit():
+                if num[i] != "-": return False  #9th character is -
+            elif not num[i].isdigit():          #rest are digits
                 return False
         return True
 
@@ -409,7 +438,6 @@ class DataView:
     """
     def __init__(self, parent):
         self.root = Frame(parent, bg="white")
-        root = self.root
 
         self.locations = fetchLocations(Dcursor)    #all exisitng food bank locations
         # ========= holds user input of the search criteria =========
@@ -419,6 +447,7 @@ class DataView:
 
 
         def fetchData():
+            """TODO"""
             search()
             rows = Dcursor.fetchall()
 
@@ -430,8 +459,9 @@ class DataView:
                     table.insert('', END, values=row)
 
         def search():
+            """searches Outgoing Database for user input search criteria"""
             item = ItemSearch.get() #get item name from search box
-            locationBool = True #initialize location bool to true 
+            locationBool = True #initialize location bool to true
             itemBool = True #initialize item bool to true
             location = LocationFilter.get() #initialize location variable from dropdown
             ascending = self.ascSort.get() #set bool for ascending search
@@ -453,57 +483,59 @@ class DataView:
 
 
         def export():
-            Dcursor.execute("SELECT * from outgoing")
-            result = Dcursor.fetchall()
-            header = []
-            toWrite = []
-            now = datetime.datetime.now()
-            currentTime = now.strftime("%H%M%S")
-            filename = "FoodForYou_Export_" + currentTime + ".csv"
-            if (result):
-                toWrite.append(["Item_name", "Category", "Quantity", "Units", "Location", "fb_ID", "fd_ID"])
-                for row in result:
+            """Exports Outgoing data base as a csv"""
+            Dcursor.execute("SELECT * from outgoing")       #selects everything from database
+            result = Dcursor.fetchall()                     #calls such query
+            toWrite = []                   #list to hold data from database, which will be used to import to csv
+
+            now = datetime.datetime.now()           #take current time
+            currentTime = now.strftime("%H%M%S")           #reformats to hours, minute, second
+            filename = "FoodForYou_Export_" + currentTime + ".csv"      #creates new file name for export
+
+            if (result):            #if query is not empty
+                toWrite.append(["Item_name", "Category", "Quantity", "Units", "Location", "fb_ID", "fd_ID"]) #sets headers of csv
+                for row in result:  #appends each row in database to toWrite
                     toWrite.append(row)
-                with open(filename, 'w', newline='\n') as csvF:
-                    csvw = csv.writer(csvF, quotechar='"', delimiter=',')
+                with open(filename, 'w', newline='\n') as csvF:     # creates filename (will overwrite if file is already existing in directory, else creates new file in directory)
+                    csvw = csv.writer(csvF, quotechar='"', delimiter=',')   #removes quotes and delimites by commas
                     for line in toWrite:
-                        csvw.writerow(line)
+                        csvw.writerow(line)         #writes data as line
             else:
                 messagebox.showerror("ERROR", "There are no entries in the database.")
 
         #====================== user input widgets ======================
-        ttk.Label(root, text="Search by item").place(x=675, y=110)
+        ttk.Label(self.root, text="Search by item").place(x=675, y=110)
 
         #prompts for user to search by item
-        ItemSearch = ttk.Entry(root, width=25)
+        ItemSearch = ttk.Entry(self.root, width=25)
         ItemSearch.place(x=675, y=130)
 
         # prompts for user to search by item ID
-        ttk.Label(root, text="Search by item ID").place(x=675, y=170)
-        IDSearch = ttk.Entry(root, width=25)
+        ttk.Label(self.root, text="Search by item ID").place(x=675, y=170)
+        IDSearch = ttk.Entry(self.root, width=25)
         IDSearch.place(x=675, y=190)
 
         # prompts for user to search by location
-        ttk.Label(root, text="Sort by location").place(x=675, y=230)
-        LocationFilter = ttk.Combobox(root, values=self.locations)
+        ttk.Label(self.root, text="Sort by location").place(x=675, y=230)
+        LocationFilter = ttk.Combobox(self.root, values=self.locations)
         LocationFilter.place(x=675, y=250)
 
         # prompts for user to sort by quantity
-        QuantitySortButton = ttk.Checkbutton(root, text="Sort ascending quantity", command=fetchData, onvalue=True,
+        QuantitySortButton = ttk.Checkbutton(self.root, text="Sort ascending quantity", command=fetchData, onvalue=True,
                                              offvalue=False, variable=self.ascSort)
         QuantitySortButton.place(x=675, y=300)
 
         # Allows user to commit search
-        SearchButton = ttk.Button(root, text="Search", width=15, command=fetchData)
+        SearchButton = ttk.Button(self.root, text="Search", width=15, command=fetchData)
         SearchButton.place(x=675, y=350)
 
         # Allows user to export data log
-        exportButton = ttk.Button(root, text="Export data", width=15, command=export)
+        exportButton = ttk.Button(self.root, text="Export data", width=15, command=export)
         exportButton.place(x=675, y=420)
 
         # ================== view table =============================================================
         # (credit due to Jerry Pi)
-        viewFrame = Frame(root, bd=5, relief='ridge', bg='wheat')   #frame to hold data
+        viewFrame = Frame(self.root, bd=5, relief='ridge', bg='wheat')   #frame to hold data
         viewFrame.place(x=30, y=110, width=600, height=350)
 
         xScroll = Scrollbar(viewFrame, orient=HORIZONTAL)       #allows user to scroll through table
@@ -513,7 +545,7 @@ class DataView:
                              xscrollcommand=xScroll.set,
                              yscrollcommand=yScroll.set)      #table to display database
 
-        # creates column headerss
+        # creates column headers
         table.heading("item_to_filter", text="item")
         table.heading("quantity_to_filter", text="quantity")
         table.heading("units", text="units")
@@ -532,21 +564,22 @@ class DataView:
         table.pack(fill=BOTH, expand=1)
 
 def onClose():
-    Dconnection.close()
-    FBconnection.close()
-    root.destroy()
+    """called when root window is closed to close out database connnections"""
+    Dconnection.close()     #closes out Outgoing database
+    FBconnection.close()    #closes out Food Bank database
+    root.destroy()          #closes out root window
 
-root = Tk()
-root.protocol("WM_DELETE_WINDOW", onClose)
-root.geometry('900x540')
-tabControl = ttk.Notebook(root)
-use_theme(root)
+root = Tk()                 #creates Tkinter window
+root.protocol("WM_DELETE_WINDOW", onClose)  #sets the window's closing function to onClose()
+root.geometry('900x540')                    #set geometry of screen
+tabControl = ttk.Notebook(root)             #creates "tabs" widget
+use_theme(root)                             #use theme for screen to applied to widgets
 
-tab1 = FBView(root).root
+tab1 = FBView(root).root                    #sets food bank view frame as a tab
 tabControl.add(tab1, text="Food Banks")
 
-tab2 = DataView(root).root
+tab2 = DataView(root).root                  #sets data log view frame as tab
 tabControl.add(tab2, text="Data Log")
 
-tabControl.pack(expand=1, fill="both")
+tabControl.pack(expand=1, fill="both")      #places frame on screen
 root.mainloop()
