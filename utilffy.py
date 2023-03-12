@@ -1,3 +1,15 @@
+"""
+Name: utilffy.py
+Created: 3/9/2023
+Authors: Katherine Smirnov, Krishna Patel
+
+Provides a common functions used by all modules, such as the database connection.
+
+Modifications:
+    3/09/2023 Added connection function to database, fetch location, and fetch category.
+    3/12/2023 Changed input parameters to connection function to all be contained in this file 
+              for easy modification.
+"""
 from tkinter import *
 from tkinter import ttk
 import mysql.connector
@@ -8,10 +20,10 @@ searchInputSize = "9"
 regFontSize = "11"
 
 port = 3441     #holds the database port number
-user = "jerryp"
-password = "111"
-host = "ix-dev.cs.uoregon.edu"
-database = "foodforyou"
+user = "jerryp" #set username for database to variable
+password = "111" #set password for database to variable
+host = "ix-dev.cs.uoregon.edu" #set hostname to variable
+database = "foodforyou" #set database name for variable
 
 def use_theme(window:Tk):
     """ use_theme(window)
@@ -61,11 +73,12 @@ def connectToDatabase():
     host: server name
     port: port number
     database: database name
+    This function creates a connection to the MySQL database.
     """
-    dbconnect = None
-    counter = 0
-    while dbconnect is None:
-        if (counter >= 10):
+    dbconnect = None #Initialize variable to connection
+    counter = 0 #initialize counter for connection tries
+    while dbconnect is None: #while the connection is not initialized we will keep trying to connect
+        if (counter >= 4): #once 4 connection attempts have been failed, exit the program.
             print("Check connection to internet")
             exit()
         try:
@@ -74,10 +87,10 @@ def connectToDatabase():
                 user=user,
                 passwd=password,
                 port=port,
-                database=database)
+                database=database) #use mysql connector with the database parameters for a connection
             # print("Connected")
         except:
-            print("Connection failed")
+            print("Connection failed") #when connection fails, catch exception 
             dbconnect = None
-            counter += 1
-    return dbconnect
+            counter += 1 #increment counter by 1
+    return dbconnect #return connection to file calling function.
