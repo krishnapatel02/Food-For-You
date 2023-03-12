@@ -252,6 +252,8 @@ class UpdateItem:
                     messagebox.showerror("ERROR", "The move quantity cannot be negative") #show error if less than 0
                 elif (locationDD.get() == "None" or locationDD.get() == ""): #Location cannot be None or empty
                     messagebox.showerror("Operation Cancelled", "Move location was none.") #show error
+                elif (locationDD.get() == location): #Cannot move to the same location
+                    messagebox.showerror("Location cannot be the same.", "Select a different location.")
                 else:
                     cursor.execute(f"select fb.fb_id from food_bank fb where fb.Location = '{locationDD.get()}'") #get food bank ID for move location
                     movefb_id = [int(i[0]) for i in cursor.fetchall()][0] #store food bank ID in varaible
