@@ -430,39 +430,26 @@ class DataView:
                     table.insert('', END, values=row)
 
         def search():
-            item = ItemSearch.get()
-            locationBool = True
-            itemBool = True
-            location = LocationFilter.get()
-            ascending = self.ascSort.get()
-            if (location == "None" or location == ""):
-                locationBool = False
-            if (item.strip() == ""):
-                itemBool = False
-            if (locationBool and itemBool and ascending):
-                Dcursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from outgoing fi join food_bank fb using(fb_id) where fi.Item_name='{item}' and fb.location = '{location}' order by fi.Quantity ASC")
-            elif (locationBool and ascending):
-                Dcursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from outgoing fi join food_bank fb using(fb_id) where fb.location = '{location}' order by fi.Quantity ASC")
-            elif (itemBool and ascending):
-                Dcursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from outgoing fi join food_bank fb using(fb_id) where fi.Item_name='{item}' order by fi.Quantity ASC")
-            elif (itemBool and locationBool):
-                Dcursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from outgoing fi join food_bank fb using(fb_id) where fi.Item_name='{item}' and fb.location = '{location}'")
-            elif (itemBool):
-                Dcursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from outgoing fi join food_bank fb using(fb_id) where fi.Item_name='{item}'")
-            elif (locationBool):
-                Dcursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from outgoing fi join food_bank fb using(fb_id) where fb.location = '{location}'")
-            elif (ascending):
-                Dcursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from outgoing fi join food_bank fb using(fb_id) order by fi.quantity ASC")
+            item = ItemSearch.get() #get item name from search box
+            locationBool = True #initialize location bool to true 
+            itemBool = True #initialize item bool to true
+            location = LocationFilter.get() #initialize location variable from dropdown
+            ascending = self.ascSort.get() #set bool for ascending search
+            fd_id = IDSearch.get()
+            if (location == "None" or location == ""): #if location is None or empty set bool to false
+                location = "%"
+            if (item.strip() == ""): #if item is empty set bool to false
+                item = "%"
+            if (fd_id.strip() == ""):
+                fd_id = "%"
             else:
+                fd_id = int(fd_id.strip())
+            if (ascending): #if ascending is specified, execute this query
                 Dcursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from outgoing fi join food_bank fb using(fb_id)")
+                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from outgoing fi join food_bank fb using(fb_id) where fi.Item_name like '{item}' and fb.location like '{location}' and fi.fd_id like '{fd_id}' order by fi.Quantity ASC")
+            else: #if ascending not specified use this query
+                Dcursor.execute(
+                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from outgoing fi join food_bank fb using(fb_id) where fi.Item_name like '{item}' and fb.location like '{location}' and fi.fd_id like '{fd_id}'")
 
 
         def export():
