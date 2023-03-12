@@ -7,6 +7,8 @@ font = "Helvetica"
 searchInputSize = "9"
 regFontSize = "11"
 
+port = 3079     #holds the database port number
+
 def use_theme(window:Tk):
     """ use_theme(window)
     Applies the theme to the inputted 'window'
