@@ -79,11 +79,11 @@ class NewItem:
             verified to make sure it meets the system requirements. If any of the input is incorrect the SQL queries
             will not be executed, and a window will be shown to display what the error is to the food bank staff.
             """
-            item_name = iteminput.get() #Assign item name to variable
-            quantity = (quantityinput.get()) #Assign quantity to variable
-            location = locationinput.get() # Assign location to variable
-            units = unitsInput.get() #Assign units to variable
-            category = categoryinput.get() #Assign category to variable
+            item_name = iteminput.get().strip() #Assign item name to variable
+            quantity = (quantityinput.get().strip()) #Assign quantity to variable
+            location = locationinput.get().strip() # Assign location to variable
+            units = unitsInput.get().strip() #Assign units to variable
+            category = categoryinput.get().strip() #Assign category to variable
             cursor.execute(f"select fb.fb_ID from food_bank fb where fb.Location='{location}'") #search for the Food Bank ID for a certain location and store it in the cursor
             temp = cursor.fetchall() #Store the cursor data in a temporary variable
             if (category != "" and item_name != "" and units != "" and quantity != "" and location != ""): #Checks if all input fields from the tkinter window are non empty
@@ -229,7 +229,7 @@ class UpdateItem:
                         origQuantity = origEntry[2] #set variable for original quantity
 
                         cursor.execute(
-                            f"update foodforyou.food_item set Item_name='{iteminput.get()}', Quantity='{quantityinput.get()}', Units='{unitsInput.get()}', Location='{location}', fb_id='{currentfb_id}' where fd_ID='{int(food_id)}'")
+                            f"update foodforyou.food_item set Item_name='{iteminput.get().strip()}', Quantity={int(quantityinput.get().strip)}, Units='{unitsInput.get().strip()}', Location='{location}', fb_id='{currentfb_id}' where fd_ID='{int(food_id)}'")
                             #update entry in food_item table to set quantity of current food item to its new quantity
                         if (int(quantityinput.get()) < origQuantity): #if the quantity set in the database was less than original record it to the outgoing database for record keeping
                             cursor.execute(
@@ -274,7 +274,7 @@ class UpdateItem:
                             item1 = cursor.fetchall()[0] #set current location item to variable
                             if (compareItems(item1, item2)): #verify that both items are the same
                                 cursor.execute(
-                                    f"select fi.fd_id from food_item fi join food_bank fb using (fb_id) where fb_id = '{movefb_id}' and fi.Item_name = '{iteminput.get()}'") #select food item ID if item exists
+                                    f"select fi.fd_id from food_item fi join food_bank fb using (fb_id) where fb_id = '{movefb_id}' and fi.Item_name = '{iteminput.get().strip()}'") #select food item ID if item exists
                                 newFoodID = [int(i[0]) for i in cursor.fetchall()][0] #store food_item id
                                 cursor.execute(f"select fi.Quantity from food_item fi where fi.fd_id = '{newFoodID}'") #select quantity for moved food item
                                 existingNewQuantity = [int(i[0]) for i in cursor.fetchall()][0] #store existing move quantity to variable
@@ -416,34 +416,21 @@ class StaffGUI:
             itemBool = True #initialize item bool to true
             location = LocationFilter.get() #initialize location variable from dropdown
             ascending = self.ascSort.get() #set bool for ascending search
+            fd_id = IDSearch.get()
             if (location == "None" or location == ""): #if location is None or empty set bool to false
-                locationBool = False
+                location = "%"
             if (item.strip() == ""): #if item is empty set bool to false
-                itemBool = False
-            if (locationBool and itemBool and ascending): #if location, item, and ascending is specified, select by locaiton, item, and sort ascending
+                item = "%"
+            if (fd_id.strip() == ""):
+                fd_id = "%"
+            else:
+                fd_id = int(fd_id.strip())
+            if (ascending): #if ascending is specified, execute this query
                 cursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}' and fb.location = '{location}' order by fi.Quantity ASC")
-            elif (locationBool and ascending): #if location and ascending search is  specified select all  items with location and sort by ascending from database.
+                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name like '{item}' and fb.location like '{location}' and fi.fd_id like '{fd_id}' order by fi.Quantity ASC")
+            else: #if ascending not specified use this query
                 cursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fb.location = '{location}' order by fi.Quantity ASC")
-            elif (itemBool and ascending): #if item and ascending search is  specified select all  items with specific item and sort by ascending from database.
-                cursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}' order by fi.Quantity ASC")
-            elif (itemBool and locationBool): #if item and locaiton search are specified select all foods with specific name and location from database
-                cursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}' and fb.location = '{location}'")
-            elif (itemBool): #if item is specified search all items matching item name from database
-                cursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}'")
-            elif (locationBool): #if location search is specified  search all items from database with that location
-                cursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fb.location = '{location}'")
-            elif (ascending): #if ascending sort all items by ascending
-                cursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) order by fi.quantity ASC")
-            else: #if no filters specified select all from the table
-                cursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id)")
+                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name like '{item}' and fb.location like '{location}' and fi.fd_id like '{fd_id}'")
 
         def update(e):
             # taken from focus(e) by jerry
