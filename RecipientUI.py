@@ -179,6 +179,15 @@ def writetofile(filename, results, open_stat, open_time):
                 No set return, but does create a file named after filename input and prints data
                 to stdout
         """
+    # Check if the user only wants to see Open food banks
+    if opennow_var.get():
+        # Check if there are no open food banks
+        if open_stat == []:
+            # Alerts the user to the empty results
+            print(f"No Food Banks are currently open.\n"
+                  f"Please either select a different neighborhood or allow closed Food Banks. Thank you!")
+            # Exit
+            return
     # Open filename as f
     with open(filename, 'w') as f:
         # Calculate the max length of each field
