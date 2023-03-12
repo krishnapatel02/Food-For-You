@@ -7,35 +7,55 @@ font = "Helvetica"
 searchInputSize = "9"
 regFontSize = "11"
 
-def use_theme(window):
+def use_theme(window:Tk):
+    """ use_theme(window)
+    Applies the theme to the inputted 'window'
+    Note: can change the font (font) and size (regFontSize) from the global variables
+    """
     style = ttk.Style(window)
-    style.theme_create("Custom")
-    # style.wm_attributes('-transparentcolor', '#ab23ff')
-    style.configure("TLabel", font=f'{font} {regFontSize}', background="#fff")
-    style.configure("TButton", font=f'{font} {regFontSize}', background="#fff")
-    style.configure("TCheckbutton", font=f'{font} {regFontSize}', background="#fff")
-    style.configure("TEntry", font=f'{font} {regFontSize}')
-    style.configure("TSpinbox", font=f'{font} {regFontSize}')
+    style.theme_create("Custom")    #creates a blank theme
+    # creates a theme for such widgets
+    style.configure("TLabel", font=(f'{font}, {regFontSize}'), background="#fff")
+    style.configure("TButton", font=(f'{font}, {regFontSize}'), background="#fff")
+    style.configure("TCheckbutton", font=(f'{font}, {regFontSize}'), background="#fff")
+    style.configure("TEntry", font=(f'{font}, {regFontSize}'))
+    style.configure("TSpinbox", font=(f'{font} {regFontSize}'))
 
 def fetchLocations(cursor):
-    cursor.execute("SELECT fb.Location from food_bank fb order by fb.Location ASC")
+    """ fetchLocations(cursor)
+    Pulls the existing locations from the database from the cursor.
+    """
+    cursor.execute("SELECT fb.Location from food_bank fb order by fb.Location ASC") #selects all foodbank locations from food bank database
     locations = []
     locations.append(None)
+    #for each row in the databsae
     for row in cursor:
+        #grab the location and appends to return value
         for col in row:
             locations.append(col)
     return locations
 
 def fetchCategory(cursor):
-    cursor.execute("SELECT DISTINCT fi.Category from food_item fi order by fi.Category ASC")
+    """ fetchLocations(cursor)
+        Pulls the existing categories from the database from the cursor.
+    """
+    cursor.execute("SELECT DISTINCT fi.Category from food_item fi order by fi.Category ASC") #selects all distinct categories from food bank database
     categories = []
+    #for each row in the databsae
     for row in cursor:
+        #grab the category and appends to return value
         for col in row:
             categories.append(col)
     return categories
 
 def connectToDatabase(user, password, host, port, database):
-
+    """ connectToDatabase(user, password, host, port, database)
+    user: username
+    password: user's password
+    host: server name
+    port: port number
+    database: database name
+    """
     dbconnect = None
     counter = 0
     while dbconnect is None:

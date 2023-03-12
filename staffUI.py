@@ -42,7 +42,7 @@ class NewItem:
         #--------------------------------------------------------------
 
         #============== holds user input of the new item ==========
-        self.quantity_to_update = IntVar()
+        self.quantity_to_update = IntVar()      #quantity
         self.units_to_update = StringVar()
         #===========================================================
 
@@ -153,8 +153,8 @@ class UpdateItem:
         self.locations = fetchLocations(cursor)
 
         #============== holds what the user inputs =================
-        self.quantity_to_update = IntVar()
-        self.units_to_update = StringVar()
+        self.quantity_to_update = IntVar()      #quantity
+        self.units_to_update = StringVar()      #units
         self.screenopt = StringVar() #holds if the user is updating, moving or deleting
         #============== holds what the user inputs =================
 
