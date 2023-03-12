@@ -31,13 +31,15 @@ import datetime
 from utilffy import *
 
 # Connect to database
-connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", port, "foodforyou")
+connection = connectToDatabase(user, password, host, port, database)
+# Store connection as c
 c = connection.cursor()
 
-# get the food options from the database
+# get the food options from the database, store it in food_options
 c.execute("SELECT DISTINCT Item_name FROM food_item")
 food_options = [row[0] for row in c.fetchall()]
 
+#get neighborhood options from database, store it in neighborhood_options
 c.execute("SELECT DISTINCT Neighborhood FROM food_bank")
 neighborhood_options = [row[0] for row in c.fetchall()]
 
@@ -52,12 +54,16 @@ use_theme(root)
 
 # Check to see if we can include the photo images
 try:
+    # This is setting the background/Title image
     root.bg = tk.PhotoImage(file="img/backgroundimg.png")
     tk.Label(image=root.bg, borderwidth=0, highlightthickness=0).place(relx=-.15, rely=0)
 
+    # This is setting the little people across the bottom of the UI
     root.trailing_img = tk.PhotoImage(file="img/trailingIMG.png")
+    # Repeat image to fill entire space across the bottom
     for i in range(0, 480, root.trailing_img.width()):
         tk.Label(root, image=root.trailing_img, bg='white').place(x=i, y=480)
+# If something goes wrong, print the message
 except Exception as e:
     print(e)
 
@@ -137,7 +143,10 @@ def opennow(neighborhood) -> list:
     day = days[dayofweek]
     # Empty list of currently open food banks
     open_stat = []
-    # Check if specific neighborhood was selected by user
+    # Base query, using day of the week
+    # Selects the open and close time of a specific location from the hours table
+    # Also selects the location from food_bank table
+    # The open and close times are not null
     query = (f"SELECT h.{day}, h.{day}_close, fb.Location "
              f"FROM hours h "
              f"JOIN food_bank fb USING(fb_id) "
@@ -145,8 +154,10 @@ def opennow(neighborhood) -> list:
 
     # If a specific neighborhood is chosen, filter results by neighborhood
     if neighborhood != "All Neighborhoods":
+        # update query string
         query += f"AND fb.Neighborhood = '{neighborhood}'"
 
+    # Execute the query
     c.execute(query)
 
     # Store the results of the query is variable hours
@@ -163,10 +174,10 @@ def opennow(neighborhood) -> list:
             if entry[2] not in open_stat:
                 # Add the food bank to the list
                 open_stat.append(entry[2])
-    # Return a list of Open food banks
+    # Return a list of Open food banks and results from query
     return open_stat, hours
 
-def writetofile(filename, results, open_stat, open_time):
+def writetofile(filename, results, open_stat, open_time, food, neighborhood):
     """ writetofile(filename: str, results: list, open_stat: list):
             Takes in filename, results list from database query, and a list of open food banks and formats
             the data to print to stdout as well as writes to filename. This way, the user can store the file
@@ -175,6 +186,7 @@ def writetofile(filename, results, open_stat, open_time):
                 filename: name of file to write pulled data to
                 results: list of data pulled from the search_database query
                 open_stat: list of food banks that are currently open
+                open_time: results of query
             - Output
                 No set return, but does create a file named after filename input and prints data
                 to stdout
@@ -185,38 +197,63 @@ def writetofile(filename, results, open_stat, open_time):
         if open_stat == []:
             # Alerts the user to the empty results
             print(f"No Food Banks are currently open.\n"
-                  f"Please either select a different neighborhood or allow closed Food Banks. Thank you!")
+                  f"Please either select a different neighborhood or allow closed Food Banks. Thank you!\n")
             # Exit
             return
     # Open filename as f
     with open(filename, 'w') as f:
-        # Prints a informing statement for the User to understand the ordering of entries
-        f.write(f"Entries are listed in Descending order by Quantity.\n"
-                f"Entries at the top of the table have the greatest availabilty.\n"
-                f"Entries marked as Low Stock have 20 units or less available.")
-        print(f"Entries are listed in Descending order by Quantity.\n"
-                f"Entries at the top of the table have the greatest availabilty.\n"
-                f"Entries marked as Low Stock have 20 units or less available.")
-        # Calculate the max length of each field
-        # Default values for open and close max
+        # next chunk of code is used to calculate the max length of each field to help with formatting
+        # Set Default values for open and close max
         maxopen = 5
         maxclose = 5
         # Ensure that open_time isn't empty
         if open_time != []:
+            # max open time length
             maxopen = max(len(entry[0]) for entry in open_time)
+            # max close time length
             maxclose = max(len(entry[1]) for entry in open_time)
+        # max item length
         maxitem = max(len(entry[0]) for entry in results)
+        # max location legnth
         maxlocation = max(len(entry[1]) for entry in results)
+        # max status length
         maxstatus = max(len(entry[4]) for entry in results)
+        # max address length
         maxaddress = max(len(entry[2]) for entry in results)
 
+        # minstat checks if every item is listed as unavailable
+        minstat = min(len(entry[4]) for entry in results)
+
+        # check if every status is set to unavailable
+        if minstat == 11:
+            # Alerts the user to there was no food available
+            print(f"{food} is not available at the food banks located in {neighborhood}. "
+            f"Please either select a different food item or neighborhood. Thank you!")
+            # Exit
+            return
+
+        # Prints an error informing statement for the User to understand the ordering of entries
+        f.write(f"Entries are listed in Descending order by Quantity.\n"
+                f"Entries at the top of the table have the greatest availabilty.\n"
+                f"Entries marked as Low Stock have 20 units or less available.")
+        print(f"Entries are listed in Descending order by Quantity.\n"
+              f"Entries at the top of the table have the greatest availabilty.\n"
+              f"Entries marked as Low Stock have 20 units or less available.\n")
+
         # Use the max length variables to create space buffers
+        # Item space buffer
         ispace = (maxitem + 5 - 4) * " "
+        #location space buffer
         lspace = (maxlocation + 5 - 8) * " "
+        # status space buffer
         sspace = (maxstatus + 5 - 6) * " "
+        # address space buffer
         aspace = (maxaddress + 5 - 8) * " "
+        # phone space buffer
         pspace = (14 + 5 - 12) * " "
+        # open time space buffer
         ospace = (maxopen + 5 - 4) * " "
+        # close time space buffer
         cspace = maxclose * " "
         # Write the headers to filename
         if address_var.get() and phone_var.get() and hours_var.get():
@@ -280,17 +317,25 @@ def writetofile(filename, results, open_stat, open_time):
         for entry in results:
             # Get the food name, location name, address name, phone number, and status
             fname, lname, aname, pname, stat = (entry[i].rstrip() for i in range(5))
-            # Create dynamic space buffers for each field
+            # Create dynamic space buffers for each field. First letter of variable denotes which
+            # variable it is holding (i.e. fspace -> food space, lspace -> location space)
+            # food space buffer
             fspace = (maxitem + 5 - len(fname)) * " "
+            # location space buffer
             lspace = (maxlocation + 5 - len(lname)) * " "
+            # address space buffer
             aspace = (maxaddress + 4 - len(aname)) * " "
+            # phone space buffer
             pspace = (14 + 5 - len(pname)) * " "
+            # stat space buffer
             sspace = (maxstatus + 5 - len(stat)) * " "
 
+            # initialize open hour time to be blank, will fill in later
             openh = ""
 
             # If the food is unavailable, don't display it
             if stat == "Unavailable":
+                # move on to next entry
                 break
 
             # Check if there is an open food bank
@@ -298,13 +343,15 @@ def writetofile(filename, results, open_stat, open_time):
                 # If location is in open_stat, it's open now
                 if lname in open_stat:
                     hours = "Open Now"
-                    # Grab the open and close times
                     for entry in open_time:
+                        # match up the location name in open_time to lname
                         if entry[2] == lname:
+                            # Grab the open and close times and set it for openh and close h, strip and trailing \n
                             openh = entry[0].rstrip()
                             closeh = entry[1].rstrip()
                 # Location isn't open now
                 else:
+                    # set everything (hours, openh, closeh) to be closed
                     hours = "Closed"
                     openh = "Closed"
                     closeh = "Closed"
@@ -313,16 +360,18 @@ def writetofile(filename, results, open_stat, open_time):
                 hours = "Closed"
                 # Check if location is open at some point today
                 for entry in open_time:
-                    # Grab open and close times if Location is open at some point
+                    # match up the location name in open_time to lname
                     if entry[2] == lname:
-                        openh = entry[0]
-                        closeh = entry[1]
+                        # Grab the open and close times and set it for openh and close h, strip and trailing \n
+                        openh = entry[0].rstrip()
+                        closeh = entry[1].rstrip()
                 # If we still haven't set open, it's closed
                 if openh == "":
+                    # Set to closed
                     openh = "Closed"
                     closeh = "Closed"
 
-            # Create space buffers for open and close
+            # Create space buffers for open (ospace) and close (cspace)
             ospace = (maxopen + 5 - len(openh)) * " "
             cspace = (maxclose + 5 - len(closeh)) * " "
 
@@ -330,7 +379,9 @@ def writetofile(filename, results, open_stat, open_time):
             # Now we print everything out, but must specify based on what was selected
             # If we only want to see open now
             if opennow_var.get():
+                # Check if hours are set to Open Now
                 if hours == "Open Now":
+                    # Each of the following print statements prints selected info details first to filename and then to stdout
                     # Check if the FB is open now and if the user has selected all three checkboxes
                     if address_var.get() and phone_var.get() and hours_var.get():
                         # Write to file
@@ -394,7 +445,7 @@ def writetofile(filename, results, open_stat, open_time):
         # Print newlines so there is space between requests
         print("\n")
 
-# create a function to get the data from the database and display it
+
 def search_database():
     """ search_database():
                 performs queries based on what the user has selected from the UI
@@ -466,12 +517,12 @@ def main():
         # Exit
         return
 
-    # Create a file named after food and neighborhood selections
-    filename = f"{food}AvailabilityAt{neighborhood}.txt"
     # Check hours of Food Banks with opennow()
     open_stat, open_time = opennow(neighborhood)
+    # Create a file named after food and neighborhood selections
+    filename = f"{food}AvailabilityAt{neighborhood}.txt"
     # Write everything to stdout and file named filename
-    writetofile(filename, results, open_stat, open_time)
+    writetofile(filename, results, open_stat, open_time, food, neighborhood)
 
 
 # create the search button
