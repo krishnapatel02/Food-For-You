@@ -392,11 +392,12 @@ class DataView:
         self.root = Frame(parent, bg="white")
         root = self.root
 
+        self.locations = fetchLocations(Dcursor)    #all exisitng food bank locations
         # ========= holds user input of the search criteria =========
-        self.foodItemSearchText = StringVar()
-        self.ascSort = BooleanVar()
-        self.loc_to_update = StringVar()
-        self.locations = fetchLocations(Dcursor)
+        self.foodItemSearchText = StringVar()   #food item
+        self.ascSort = BooleanVar()             #ascending sort (true: asc, false: desc)
+        self.loc_to_update = StringVar()        #food bank location
+
 
         def fetchData():
             search()
