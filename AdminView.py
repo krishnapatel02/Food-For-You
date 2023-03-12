@@ -17,8 +17,7 @@ Modifications:
     3/11/2023: Add neighborhood and phone number input to newFB -KS
                Added validate phone number function -KS
 
-Databases uses:
-    TODO check this
+Table used:
     Outgoing
     Food Banks
     Food Items
@@ -62,9 +61,9 @@ class FBView:
                 Grabs data in database of the newly inserted food bank, and places in table
                 Input: newFBID is the new food bank
             """
-            FBcursor.execute(                   # selects all rows/columns from food item database with the food bank location which is known from the new FB ID
+            FBcursor.execute(                   # selects all rows/columns from food item table with the food bank location which is known from the new FB ID
                 f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fb.fb_id = {newFBID}")
-            rows = FBcursor.fetchall()          # grabs data TODO
+            rows = FBcursor.fetchall()          # stores query as list
 
             # Delete the old table and insert each row in the current database to accomplish refresh
             if rows != 0:
@@ -447,15 +446,14 @@ class DataView:
 
 
         def fetchData():
-            """TODO"""
-            search()
-            rows = Dcursor.fetchall()
+            search() #call search function to store all entries in cursor
+            rows = cursor.fetchall() #set rows from cursor
 
             # Delete the old table and insert each row in the current database to accomplish refresh
             if rows != 0:
                 table.delete(*table.get_children())
 
-                for row in rows:
+                for row in rows: #populate table with new entries
                     table.insert('', END, values=row)
 
         def search():
