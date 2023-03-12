@@ -25,7 +25,7 @@ Databases uses:
 
 References:
     EasyA, admin.py from Jerry Pi
-        -Recycled code to display database in table and update items from data to database
+        -Recycled code to display database in a table and update items in database
 
 Notes:
     Abbreviations:
