@@ -374,9 +374,8 @@ class StaffGUI:
         self.root.title("Staff")
         self.screenWidth = 900
         self.root.geometry(f'{self.screenWidth}x540')
-        self.foodItemSearchText = StringVar()
         self.ascSort = BooleanVar()
-        self.locations = fetchLocations(cursor)
+        self.locations = fetchLocations(cursor)         #grab exisiting locations
         use_theme(root)
 
         #-----------------------------setting up background---------------------------------------
@@ -529,7 +528,6 @@ class StaffGUI:
 connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou") #create connection to database using function from utilffy.py
 #connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
 cursor = connection.cursor() #initialize cursor to database
-
 
 
 StaffGUI() #start tkinter interface
