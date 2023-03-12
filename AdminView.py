@@ -18,21 +18,22 @@ Modifications:
 
 References:
     EasyA, admin.py from Jerry Pi
-        -Recycled code to display database into table and update items from data to database
+        -Recycled code to display database in table and update items from data to database
 """
 from utilffy import *
 from tkinter import filedialog
 import timepicker as time           #necessary for time widget in addFB screen
 import csv
 import os
+import datetime
 
 
-#FBconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
-FBconnection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
+FBconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
+#FBconnection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
 FBcursor = FBconnection.cursor()
 
-#Dconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
-Dconnection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
+Dconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
+#Dconnection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
 Dcursor = Dconnection.cursor()
 
 class FBView:
@@ -58,19 +59,10 @@ class FBView:
                     table.insert('', END, values=row)
 
         def search(newFBID):
+            """search(newFBID)"""
+            print(type(newFBID))
             FBcursor.execute(
                 f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fb.fb_id = {newFBID}")
-
-        def update(e):
-            # taken from focus(e) by jerry
-            cursor = table.focus()
-            content = table.item(cursor)
-            row = content['values']
-            item = row[0]
-            quantity = row[1]
-            units = row[2]
-            food_id = row[3]
-            location = row[4]
 
         #================== user widgets =============================================================
         AddFBButton = ttk.Button(root, text="New Food Bank +", width=20, command=self.addFB)
@@ -100,8 +92,6 @@ class FBView:
         table.column("location_to_filter", width=100)
         table['show'] = 'headings'
 
-        #connect a mouse click to the update function
-        table.bind('<ButtonRelease-1>', update)
         # get all values and pack the table on to the screen
         table.pack(fill=BOTH, expand=1)
         #=============================================================================================
@@ -200,12 +190,16 @@ class FBView:
             print("Succesfully imported file")
 
         def saveChanges():
-            # happens when user pushes "save changes"
-            #   (user can input times, location and upload files in any order
-            #   so "save changes" does the commit)
+            """
+            This function saves all of the user's input to the SQL database. All input is retrieved and then
+            verified to make sure all inputs are filled in, the phone number is of correct format, food bank name
+            doesn't already exist, and that the open and closing times are valid. If such cases of where the input is
+            incorrect the SQL queries will not be executed, and a window will be shown to display what the error is to
+            the user.
+            """
 
-            newloc = locationInput.get()
-            times = {"Monday": (MtimeOpen.getTime(), MtimeClose.getTime()),
+            newloc = locationInput.get()                                        #holds the location input
+            times = {"Monday": (MtimeOpen.getTime(), MtimeClose.getTime()),     #holds the time inputs
                      "Tuesday": (TtimeOpen.getTime(), TtimeClose.getTime()),
                      "Wednesday": (WtimeOpen.getTime(), WtimeClose.getTime()),
                      "Thursday": (RtimeOpen.getTime(), RtimeClose.getTime()),
@@ -213,36 +207,32 @@ class FBView:
                      "Saturday": (StimeOpen.getTime(), StimeClose.getTime()),
                      "Sunday": (UtimeOpen.getTime(), UtimeClose.getTime())
                      }
-            openTimes = compareTimes(times)
-            phone_number = PhoneNumInput.get()
+            openTimes = compareTimes(times)        #keeps the days which are open (omits times with open == end)
 
-            if not self.checkPhoneNum(phone_number):
+            phone_number = PhoneNumInput.get()                      #holds the user inputted phone number
+            if not self.checkPhoneNum(phone_number):                #validates its of correct format
                 messagebox.showerror("ERROR", "Invalid phone number. Must be formatted as (XXX) XXX-XXXX")
                 return
 
-            neighborhood = NeighborhoodInput.get()
-            FBName = FBNameInput.get()
-            units = "lbs"
-            FBcursor.execute(f"select MAX(fb.fb_ID) from food_bank fb")
-            maxfb_ID = FBcursor.fetchall()
-            FBcursor.execute(f"select MAX(fi.fd_ID) from food_item fi")
-            maxfd_ID = FBcursor.fetchall()
-            if (maxfd_ID != []):
+            neighborhood = NeighborhoodInput.get()              #holds the user inputted neighborhood
+            FBName = FBNameInput.get()                          #holds the user inputter food bank name
+            FBcursor.execute(f"select MAX(fb.fb_ID) from food_bank fb")     #grabs max exisiting food bank id
+            maxfb_ID = FBcursor.fetchall()                                  #holds such above
+            FBcursor.execute(f"select MAX(fi.fd_ID) from food_item fi")     #grabs max exisiting food item id
+            maxfd_ID = FBcursor.fetchall()                                  #holds such above
+            if (maxfd_ID != []):   #creates a new id for the new food bank
                 maxfd_ID = int(maxfd_ID[0][0]) + 1
-            else:
+            else:                                       # if no existing food bank already
                 maxfd_ID = 1
             newfb_ID = None
-            if (maxfb_ID != []):
+            if (maxfb_ID != []):     #creates a new id for the new food item
                 newfb_ID = int(maxfb_ID[0][0]) + 1
-            else:
+            else:                   # if no existing food item already
                 newfb_ID = 1
-            FBcursor.execute(f"select * from food_bank fb where fb.Location = '{FBName}'")
+            FBcursor.execute(f"select * from food_bank fb where fb.Location = '{FBName}'")  #pulls existing food banks with such name
             locationCheck = FBcursor.fetchall()
-            FBcursor.execute(f"select * from food_bank fb where fb.Address = '{newloc}'")
+            FBcursor.execute(f"select * from food_bank fb where fb.Address = '{newloc}'")   #pulls existing food banks with such address
             addressCheck = FBcursor.fetchall()
-            # TODO: Check phone number?
-            # TODO: Validate Hours?
-            # TODO: Format Hours in same format as database, the hours need to be NULL if there is nothing there.
             if(openTimes != None):
                 if (locationCheck == [] and addressCheck == []):
                     FBcursor.execute(f"insert into foodforyou.food_bank values('{FBName}', " + \
@@ -371,8 +361,6 @@ class FBView:
         submitButton = ttk.Button(newFBScreen, text="Save changes", width=15, command=saveChanges)
         submitButton.place(x=600, y=250)
 
-        # TODO show fb hours database
-
         newFBScreen.mainloop()
 
     def checkPhoneNum(self, num:str)->bool:
@@ -456,18 +444,6 @@ class DataView:
                 Dcursor.execute(
                     f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from outgoing fi join food_bank fb using(fb_id)")
 
-        def update(e):
-            # taken from focus(e) by jerry
-            cursor = table.focus()
-            content = table.item(cursor)
-            row = content['values']
-            item = row[0]
-            quantity = row[1]
-            units = row[2]
-            food_id = row[3]
-            location = row[4]
-
-            # UpdateItem(self.root, item, quantity, units, location, food_id)
 
         def export():
             Dcursor.execute("SELECT * from outgoing")
@@ -544,16 +520,14 @@ class DataView:
         table.column("location_to_filter", width=100)
         table['show'] = 'headings'
 
-        #connects mouse click with updating item
-        table.bind('<ButtonRelease-1>', update)
         # get all values and pack the table on to the screen
         fetchData()
         table.pack(fill=BOTH, expand=1)
 
 def onClose():
-        Dconnection.close()
-        FBconnection.close()
-        root.destroy()
+    Dconnection.close()
+    FBconnection.close()
+    root.destroy()
 
 root = Tk()
 root.protocol("WM_DELETE_WINDOW", onClose)
