@@ -26,15 +26,15 @@ import timepicker as time
 import csv
 import os
 from utilffy import *
+import datetime
 
 
-
-FBconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
-#FBconnection = connectToDatabase("krishna", "pass", "127.0.0.1", 3306, "foodforyou")
+#FBconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
+FBconnection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
 FBcursor = FBconnection.cursor()
 
-Dconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
-#Dconnection = connectToDatabase("krishna", "pass", "127.0.0.1", 3306, "foodforyou")
+#Dconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
+Dconnection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
 Dcursor = Dconnection.cursor()
 
 class FBView:
@@ -260,9 +260,19 @@ class FBView:
                         category = line[1]
                         quantity = int(line[2])
                         # units = line[3]
-                        FBcursor.execute(
-                            f"insert into foodforyou.food_item values ('{item_name}', '{category}', {quantity}, '{units}', '{FBName}', {int(newfb_ID)}, {maxfd_ID})")
-                        maxfd_ID += 1
+                        FBcursor.execute(f"select * from food_item fi where fi.Item_name='{item_name}' and fi.units = '{units}' and fi.category = '{category}' and fi.location = '{FBName}'")
+                        duplicateCheck = FBcursor.fetchall()
+                        #print(duplicateCheck)
+                        if(duplicateCheck==[]):
+                            FBcursor.execute(
+                                f"insert into foodforyou.food_item values ('{item_name}', '{category}', {quantity}, '{units}', '{FBName}', {int(newfb_ID)}, {maxfd_ID})")
+                            maxfd_ID += 1
+                        else:
+                            duplicateID = duplicateCheck[0][6]
+                            insertQuantity = quantity+int(duplicateCheck[0][2])
+                            FBcursor.execute(
+                                f"update foodforyou.food_item set Quantity={insertQuantity} where fd_ID = {duplicateID}"
+                            )
 
                     FBconnection.commit()
                     fetchData(newfb_ID)
@@ -466,11 +476,14 @@ class DataView:
             result = Dcursor.fetchall()
             header = []
             toWrite = []
+            now = datetime.datetime.now()
+            currentTime = now.strftime("%H%M%S")
+            filename = "FoodForYou_Export_" + currentTime + ".csv"
             if (result):
                 toWrite.append(["Item_name", "Category", "Quantity", "Units", "Location", "fb_ID", "fd_ID"])
                 for row in result:
                     toWrite.append(row)
-                with open("file.csv", 'w', newline='\n') as csvF:
+                with open(filename, 'w', newline='\n') as csvF:
                     csvw = csv.writer(csvF, quotechar='"', delimiter=',')
                     for line in toWrite:
                         csvw.writerow(line)
@@ -539,8 +552,13 @@ class DataView:
         fetchData()
         table.pack(fill=BOTH, expand=1)
 
+def onClose():
+        Dconnection.close()
+        FBconnection.close()
+        root.destroy()
 
 root = Tk()
+root.protocol("WM_DELETE_WINDOW", onClose)
 root.geometry('900x540')
 tabControl = ttk.Notebook(root)
 use_theme(root)

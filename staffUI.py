@@ -4,6 +4,8 @@ connection = None
 cursor = None
 
 
+
+
 class NewItem:
     def __init__(self, parent):
         #----------------------setting up screen for "New item"---------
@@ -62,9 +64,9 @@ class NewItem:
                 quantity = int(quantity)
                 if (quantity >= 0):
                     if (temp != []):
-                        print(temp)
+                        #print(temp)
                         fb_id = int(temp[0][0])
-                        print(location)
+                        #print(location)
                         cursor.execute(
                             f"select * from food_item fi where fi.Item_name = '{item_name}' and fi.units = '{units}' and fi.location = '{location}' and fi.fb_ID = {fb_id}")
                         result = cursor.fetchall()
@@ -208,10 +210,10 @@ class UpdateItem:
                     movefb_id = [int(i[0]) for i in cursor.fetchall()][0]
                     cursor.execute(
                         f"select * from food_item fi where fi.Item_name='{item}' and fi.units = '{units}' and fi.fb_id={movefb_id}")
-                    a = cursor.fetchall()
+                    itemCheck = cursor.fetchall()
                     # print(a)
-                    item2 = a[0]
-                    if (item2 != []):
+                    if (itemCheck != []):
+                        item2 = itemCheck[0]
                         cursor.execute(f"select * from food_item fi where fi.Item_name='{item}' and fi.fb_id={fb_id}")
                         item1 = cursor.fetchall()[0]
                         if (compareItems(item1, item2)):
@@ -222,8 +224,8 @@ class UpdateItem:
                             existingNewQuantity = [int(i[0]) for i in cursor.fetchall()][0]
                             updateQuantity = moveQuantity + existingNewQuantity
                             currentItemUpdateQuantity = origQuantity - moveQuantity
-                            print(currentItemUpdateQuantity)
-                            print(updateQuantity)
+                            #print(currentItemUpdateQuantity)
+                            #print(updateQuantity)
 
                             cursor.execute(
                                 f"update foodforyou.food_item set Quantity='{currentItemUpdateQuantity}' where fd_ID='{int(food_id)}'")
@@ -232,13 +234,26 @@ class UpdateItem:
 
                             connection.commit()
                             messagebox.showinfo("Success", "Quantity successfully moved.")
-
-
-
                         else:
                             messagebox.showerror("ERROR", "The items are not the same. Check quantity and category.")
                     else:
-                        messagebox.showerror("ERROR", "Item to move to does not exist, please add the item.")
+                        cursor.execute(f"select fb.fb_id from food_bank fb where fb.Location = '{locationDD.get()}'")
+                        movefb_id = [int(i[0]) for i in cursor.fetchall()][0]
+                        cursor.execute(f"select * from food_item fi where fi.Item_name='{item}' and fi.fb_id={fb_id}")
+                        item1 = cursor.fetchall()[0]
+                        cursor.execute(f"select MAX(fi.fd_ID) from food_item fi")
+                        temp = cursor.fetchall()
+                        key = 1
+                        if (temp != []):
+                            key = int(temp[0][0]) + 1
+                        newQuantity = origQuantity - moveQuantity
+                        cursor.execute(
+                                f"update foodforyou.food_item set Quantity='{newQuantity}' where fd_ID='{int(food_id)}'")
+                        cursor.execute(
+                            f"insert into foodforyou.food_item values ('{item}', '{item1[1]}', {moveQuantity}, '{units}', '{locationDD.get()}', {int(movefb_id)}, {key})"
+                        )
+
+                        messagebox.showinfo("Item does not exist", "The item did not exist in the food bank it was being moved to an entry was created automatically")
             elif (operation == 'delete'):
                 cursor.execute(f"delete from food_item where fd_id = {food_id}")
                 connection.commit()
@@ -285,9 +300,11 @@ class UpdateItem:
 
 
 
-connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
-#connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
+#connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
+connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
 cursor = connection.cursor()
+
+
 
 
 class StaffGUI:
@@ -317,6 +334,10 @@ class StaffGUI:
             print(e)
 
         root.configure(background='white')
+
+        def onClose():
+            connection.close()
+            root.destroy()
 
         #-------------------------- item modification functions ---------------------------------------------
         def fetchData():
@@ -439,6 +460,7 @@ class StaffGUI:
         table.bind('<ButtonRelease-1>', update)
         fetchData()
         table.pack(fill=BOTH, expand=1)
+        root.protocol("WM_DELETE_WINDOW", onClose)
         root.mainloop()
 
 
