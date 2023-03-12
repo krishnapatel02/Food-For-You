@@ -28,11 +28,11 @@ import os
 
 
 #FBconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
-FBconnection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
+FBconnection = connectToDatabase("krishna", "pass", "127.0.0.1", 3306, "foodforyou")
 FBcursor = FBconnection.cursor()
 
 #Dconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
-Dconnection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
+Dconnection = connectToDatabase("krishna", "pass", "127.0.0.1", 3306, "foodforyou")
 Dcursor = Dconnection.cursor()
 
 class FBView:
@@ -222,7 +222,7 @@ class FBView:
 
             neighborhood = NeighborhoodInput.get()
             FBName = FBNameInput.get()
-            units = "lbs"
+            #units = "lbs"
             FBcursor.execute(f"select MAX(fb.fb_ID) from food_bank fb")
             maxfb_ID = FBcursor.fetchall()
             FBcursor.execute(f"select MAX(fi.fd_ID) from food_item fi")
@@ -257,6 +257,7 @@ class FBView:
                         item_name = line[0]
                         category = line[1]
                         quantity = int(line[2])
+                        units = line[3]
                         # units = line[3]
                         FBcursor.execute(f"select * from food_item fi where fi.Item_name='{item_name}' and fi.units = '{units}' and fi.category = '{category}' and fi.location = '{FBName}'")
                         duplicateCheck = FBcursor.fetchall()
