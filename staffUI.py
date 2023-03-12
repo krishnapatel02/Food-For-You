@@ -27,6 +27,162 @@ from utilffy import *
 connection = None
 cursor = None
 
+connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
+#connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
+cursor = connection.cursor()
+
+
+class StaffGUI:
+    def __init__(self):
+        #----------------------setting up screen for "New item"---------
+        self.root = Tk()
+        root = self.root
+        self.root.title("Staff")
+        self.screenWidth = 900
+        self.root.geometry(f'{self.screenWidth}x540')
+        self.foodItemSearchText = StringVar()
+        self.ascSort = BooleanVar()
+        self.locations = fetchLocations(cursor)
+        use_theme(root)
+        #-----------------------------setting up background---------------------------------------
+        global fetchData
+        #structured to catch errors if user does not have background images,
+            # allows the user to run the program without bg images
+        try:
+            self.bg = PhotoImage(file="img/backgroundimg.png")
+            Label(master=root, image=self.bg, borderwidth=0, highlightthickness=0).place(x=0, y=0)
+
+            self.trailing_img = PhotoImage(file="img/trailingIMG.png")
+            for i in range(0, self.screenWidth, self.trailing_img.width()):
+                Label(master=root, image=self.trailing_img, bg='white').place(x=i, y=480)
+        except Exception as e:
+            print(e)
+
+        root.configure(background='white')
+
+        #-------------------------- item modification functions ---------------------------------------------
+        def fetchData():
+            search()
+            rows = cursor.fetchall()
+
+            # Delete the old table and insert each row in the current database to accomplish refresh
+            if rows != 0:
+                table.delete(*table.get_children())
+
+                for row in rows:
+                    table.insert('', END, values=row)
+
+        def search():
+            item = ItemSearch.get()
+            locationBool = True
+            itemBool = True
+            location = LocationFilter.get()
+            ascending = self.ascSort.get()
+            if (location == "None" or location == ""):
+                locationBool = False
+            if (item.strip() == ""):
+                itemBool = False
+            if (locationBool and itemBool and ascending):
+                cursor.execute(
+                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}' and fb.location = '{location}' order by fi.Quantity ASC")
+            elif (locationBool and ascending):
+                cursor.execute(
+                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fb.location = '{location}' order by fi.Quantity ASC")
+            elif (itemBool and ascending):
+                cursor.execute(
+                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}' order by fi.Quantity ASC")
+            elif (itemBool and locationBool):
+                cursor.execute(
+                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}' and fb.location = '{location}'")
+            elif (itemBool):
+                cursor.execute(
+                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}'")
+            elif (locationBool):
+                cursor.execute(
+                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fb.location = '{location}'")
+            elif (ascending):
+                cursor.execute(
+                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) order by fi.quantity ASC")
+            else:
+                cursor.execute(
+                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id)")
+
+        def update(e):
+            # taken from focus(e) by jerry
+            cursor = table.focus()
+            content = table.item(cursor)
+            row = content['values']
+            item = row[0]
+            quantity = row[1]
+            units = row[2]
+            food_id = row[3]
+            location = row[4]
+
+            UpdateItem(root, item, quantity, units, location, food_id)
+
+        def addItem():
+            NewItem(root)
+
+
+        #--------------------------------------- search widgets -------------------------------------
+        # widgets to search by item
+        ttk.Label(root, text="Search by item").place(x=675, y=110)
+        ItemSearch = ttk.Entry(root, width=25)
+        ItemSearch.place(x=675, y=130)
+
+        # widgets to search by item ID
+        ttk.Label(root, text="Search by item ID").place(x=675, y=170)
+        IDSearch = ttk.Entry(root, width=25)
+        IDSearch.place(x=675, y=190)
+
+        # widgets to filter by location
+        ttk.Label(root, text="Sort by location").place(x=675, y=230)
+        LocationFilter = ttk.Combobox(root, values=self.locations)
+        LocationFilter.place(x=675, y=250)
+
+        # widgets to sort by quantity
+        QuantitySortButton = ttk.Checkbutton(root, text="Sort ascending quantity", command=fetchData, onvalue=True,
+                                             offvalue=False, variable=self.ascSort)
+        QuantitySortButton.place(x=675, y=300)
+
+        # widgets to do the search action
+        SearchButton = ttk.Button(root, text="Search", width=15, command=fetchData)
+        SearchButton.place(x=675, y=350)
+
+        # widgets to do the "add item" action
+        addButton = ttk.Button(text="New Item +", command=addItem, width=15)
+        addButton.place(x=675, y=410)
+
+
+        #------------------------------------ table ---------------------------------------------------
+        viewFrame = Frame(root, bd=5, relief='ridge', bg='wheat')
+        viewFrame.place(x=30, y=110, width=600, height=350)
+        xScroll = Scrollbar(viewFrame, orient=HORIZONTAL)   #allows the user to scroll
+        yScroll = Scrollbar(viewFrame, orient=VERTICAL)
+        table = ttk.Treeview(viewFrame, columns=(
+            'item_to_filter', 'quantity_to_filter', 'units', 'fid_to_filter', 'location_to_filter'),
+                             xscrollcommand=xScroll.set,
+                             yscrollcommand=yScroll.set)
+
+        table.heading("item_to_filter", text="item")
+        table.heading("quantity_to_filter", text="quantity")
+        table.heading("units", text="units")
+        table.heading("fid_to_filter", text="food id")
+        table.heading("location_to_filter", text="locations")
+
+        table.column("item_to_filter", width=100)
+        table.column("quantity_to_filter", width=25)
+        table.column("units", width=25)
+        table.column("fid_to_filter", width=10);
+        table.column("location_to_filter", width=100)
+        table['show'] = 'headings'
+
+        # get all values and pack the table on to the screen
+        table.bind('<ButtonRelease-1>', update)
+        fetchData()
+        table.pack(fill=BOTH, expand=1)
+        root.mainloop()
+
 
 class NewItem:
     def __init__(self, parent):
@@ -306,165 +462,6 @@ class UpdateItem:
         tabControl.pack(pady=10)
         #add action/function to submit button
         submitButton.configure(command=saveChanges)
-
-
-
-connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
-#connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
-cursor = connection.cursor()
-
-
-class StaffGUI:
-    def __init__(self):
-        #----------------------setting up screen for "New item"---------
-        self.root = Tk()
-        root = self.root
-        self.root.title("Staff")
-        self.screenWidth = 900
-        self.root.geometry(f'{self.screenWidth}x540')
-        self.foodItemSearchText = StringVar()
-        self.ascSort = BooleanVar()
-        self.locations = fetchLocations(cursor)
-        use_theme(root)
-        #-----------------------------setting up background---------------------------------------
-        global fetchData
-        #structured to catch errors if user does not have background images,
-            # allows the user to run the program without bg images
-        try:
-            self.bg = PhotoImage(file="img/backgroundimg.png")
-            Label(master=root, image=self.bg, borderwidth=0, highlightthickness=0).place(x=0, y=0)
-
-            self.trailing_img = PhotoImage(file="img/trailingIMG.png")
-            for i in range(0, self.screenWidth, self.trailing_img.width()):
-                Label(master=root, image=self.trailing_img, bg='white').place(x=i, y=480)
-        except Exception as e:
-            print(e)
-
-        root.configure(background='white')
-
-        #-------------------------- item modification functions ---------------------------------------------
-        def fetchData():
-            search()
-            rows = cursor.fetchall()
-
-            # Delete the old table and insert each row in the current database to accomplish refresh
-            if rows != 0:
-                table.delete(*table.get_children())
-
-                for row in rows:
-                    table.insert('', END, values=row)
-
-        def search():
-            item = ItemSearch.get()
-            locationBool = True
-            itemBool = True
-            location = LocationFilter.get()
-            ascending = self.ascSort.get()
-            if (location == "None" or location == ""):
-                locationBool = False
-            if (item.strip() == ""):
-                itemBool = False
-            if (locationBool and itemBool and ascending):
-                cursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}' and fb.location = '{location}' order by fi.Quantity ASC")
-            elif (locationBool and ascending):
-                cursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fb.location = '{location}' order by fi.Quantity ASC")
-            elif (itemBool and ascending):
-                cursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}' order by fi.Quantity ASC")
-            elif (itemBool and locationBool):
-                cursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}' and fb.location = '{location}'")
-            elif (itemBool):
-                cursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fi.Item_name='{item}'")
-            elif (locationBool):
-                cursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) where fb.location = '{location}'")
-            elif (ascending):
-                cursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id) order by fi.quantity ASC")
-            else:
-                cursor.execute(
-                    f"SELECT fi.Item_name, fi.Quantity, fi.Units, fi.fd_id, fb.Location from food_item fi join food_bank fb using(fb_id)")
-
-        def update(e):
-            # taken from focus(e) by jerry
-            cursor = table.focus()
-            content = table.item(cursor)
-            row = content['values']
-            item = row[0]
-            quantity = row[1]
-            units = row[2]
-            food_id = row[3]
-            location = row[4]
-
-            UpdateItem(root, item, quantity, units, location, food_id)
-
-        def addItem():
-            NewItem(root)
-
-
-        #--------------------------------------- search widgets -------------------------------------
-        # widgets to search by item
-        ttk.Label(root, text="Search by item").place(x=675, y=110)
-        ItemSearch = ttk.Entry(root, width=25)
-        ItemSearch.place(x=675, y=130)
-
-        # widgets to search by item ID
-        ttk.Label(root, text="Search by item ID").place(x=675, y=170)
-        IDSearch = ttk.Entry(root, width=25)
-        IDSearch.place(x=675, y=190)
-
-        # widgets to filter by location
-        ttk.Label(root, text="Sort by location").place(x=675, y=230)
-        LocationFilter = ttk.Combobox(root, values=self.locations)
-        LocationFilter.place(x=675, y=250)
-
-        # widgets to sort by quantity
-        QuantitySortButton = ttk.Checkbutton(root, text="Sort ascending quantity", command=fetchData, onvalue=True,
-                                             offvalue=False, variable=self.ascSort)
-        QuantitySortButton.place(x=675, y=300)
-
-        # widgets to do the search action
-        SearchButton = ttk.Button(root, text="Search", width=15, command=fetchData)
-        SearchButton.place(x=675, y=350)
-
-        # widgets to do the "add item" action
-        addButton = ttk.Button(text="New Item +", command=addItem, width=15)
-        addButton.place(x=675, y=410)
-
-
-        #------------------------------------ table ---------------------------------------------------
-        viewFrame = Frame(root, bd=5, relief='ridge', bg='wheat')
-        viewFrame.place(x=30, y=110, width=600, height=350)
-        xScroll = Scrollbar(viewFrame, orient=HORIZONTAL)   #allows the user to scroll
-        yScroll = Scrollbar(viewFrame, orient=VERTICAL)
-        table = ttk.Treeview(viewFrame, columns=(
-            'item_to_filter', 'quantity_to_filter', 'units', 'fid_to_filter', 'location_to_filter'),
-                             xscrollcommand=xScroll.set,
-                             yscrollcommand=yScroll.set)
-
-        table.heading("item_to_filter", text="item")
-        table.heading("quantity_to_filter", text="quantity")
-        table.heading("units", text="units")
-        table.heading("fid_to_filter", text="food id")
-        table.heading("location_to_filter", text="locations")
-
-        table.column("item_to_filter", width=100)
-        table.column("quantity_to_filter", width=25)
-        table.column("units", width=25)
-        table.column("fid_to_filter", width=10);
-        table.column("location_to_filter", width=100)
-        table['show'] = 'headings'
-
-        # get all values and pack the table on to the screen
-        table.bind('<ButtonRelease-1>', update)
-        fetchData()
-        table.pack(fill=BOTH, expand=1)
-        root.mainloop()
-
 
 StaffGUI()
 
