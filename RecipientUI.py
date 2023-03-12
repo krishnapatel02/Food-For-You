@@ -25,13 +25,12 @@ Modification Date: February 27rd, 2023 - created document and built user interfa
     March 11th, 2023 - added checkboxes, LVH
     March 12th, 2023 - cleaned up code and added more commentary, LVH
 """
-
 import tkinter as tk
 import datetime
 from utilffy import *
 
 # Connect to database
-connection = connectToDatabase(user, password, host, port, database)
+connection = connectToDatabase()
 # Store connection as c
 c = connection.cursor()
 
@@ -50,7 +49,7 @@ root.title("Food Finder")
 root.geometry("430x540")
 root.resizable(False, False)
 # Apply style to gui
-use_theme(root)
+use_theme(root, "12")
 
 # Check to see if we can include the photo images
 try:
@@ -68,7 +67,7 @@ except Exception as e:
     print(e)
 
 # create the food category dropdown
-food_label = tk.Label(root, text="Select a food category:")
+food_label = ttk.Label(root, text="Select a food category:")
 food_label.pack()
 food_label.place(relx=0.5, rely=0.26, anchor=tk.CENTER)
 # add a blank option to the list of food options
@@ -82,7 +81,7 @@ food_dropdown.pack()
 food_dropdown.place(relx=0.5, rely=0.33, anchor=tk.CENTER)
 
 # create the neighborhood dropdown
-neighborhood_label = tk.Label(root, text="Select a neighborhood:")
+neighborhood_label = ttk.Label(root, text="Select a neighborhood:")
 neighborhood_label.pack()
 neighborhood_label.place(relx=0.5, rely=0.43, anchor=tk.CENTER)
 # add a blank option to the list of neighborhoods
@@ -97,25 +96,25 @@ neighborhood_dropdown.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
 # create phone number checkbox
 phone_var = tk.BooleanVar(root)
-phone_checkbox = tk.Checkbutton(root, text="Show Phone Number", variable=phone_var)
+phone_checkbox = ttk.Checkbutton(root, text="Show Phone Number", variable=phone_var)
 phone_checkbox.pack()
 phone_checkbox.place(relx=0.5, rely=0.6, anchor=tk.CENTER)
 
 # create street address checkbox
 address_var = tk.BooleanVar(root)
-address_checkbox = tk.Checkbutton(root, text="Show Street Address", variable=address_var)
+address_checkbox = ttk.Checkbutton(root, text="Show Street Address", variable=address_var)
 address_checkbox.pack()
 address_checkbox.place(relx=0.5, rely=0.65, anchor=tk.CENTER)
 
 # create hours checkbox
 hours_var = tk.BooleanVar(root)
-hours_checkbox = tk.Checkbutton(root, text="Show Today's Hours", variable=hours_var)
+hours_checkbox = ttk.Checkbutton(root, text="Show Today's Hours", variable=hours_var)
 hours_checkbox.pack()
 hours_checkbox.place(relx=0.5, rely=0.7, anchor=tk.CENTER)
 
 # create hours checkbox
 opennow_var = tk.BooleanVar(root)
-opennow_checkbox = tk.Checkbutton(root, text="Only Show Open Now", variable=opennow_var)
+opennow_checkbox = ttk.Checkbutton(root, text="Only Show Open Now", variable=opennow_var)
 opennow_checkbox.pack()
 opennow_checkbox.place(relx=0.5, rely=0.75, anchor=tk.CENTER)
 
@@ -526,12 +525,12 @@ def main():
 
 
 # create the search button
-search_button = tk.Button(root, text="Search", command=main)
+search_button = ttk.Button(root, text="Search", command=main)
 search_button.pack()
 search_button.place(relx=0.5, rely=.8, anchor=tk.CENTER)
 
 # create the label to display the results
-result_label = tk.Label(root, text="")
+result_label = ttk.Label(root, text="")
 result_label.pack()
 
 # start the main loop
