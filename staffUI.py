@@ -55,7 +55,7 @@ class NewItem:
         iteminput.place(x=(self.swidth) / 2 - 30, y=50)
 
         ttk.Label(self.screen, text="category:").place(x=50, y=80)
-        categoryinput = ttk.Combobox(self.screen, values=self.categories, font=(font, 8)) #user dropdown for category
+        categoryinput = ttk.Combobox(self.screen, values=self.categories, font=(font, 8), state="readonly") #user dropdown for category
         categoryinput.place(x=(self.swidth) / 2 - 30, y=80)
 
         ttk.Label(self.screen, text="quantity:").place(x=50, y=110)
@@ -69,7 +69,7 @@ class NewItem:
         unitsInput.place(x=(self.swidth) / 2 - 30, y=140)
 
         ttk.Label(self.screen, text="location:").place(x=50, y=170)
-        locationinput = ttk.Combobox(self.screen, values=self.locations, font=(font, 8))    #user dropdown for location
+        locationinput = ttk.Combobox(self.screen, values=self.locations, font=(font, 8), state="readonly")    #user dropdown for location
         locationinput.place(x=(self.swidth) / 2 - 30, y=170)
         #======================================================================
 
@@ -79,45 +79,55 @@ class NewItem:
             verified to make sure it meets the system requirements. If any of the input is incorrect the SQL queries
             will not be executed, and a window will be shown to display what the error is to the food bank staff.
             """
-            item_name = iteminput.get().strip() #Assign item name to variable
-            quantity = (quantityinput.get().strip()) #Assign quantity to variable
-            location = locationinput.get().strip() # Assign location to variable
-            units = unitsInput.get().strip() #Assign units to variable
-            category = categoryinput.get().strip() #Assign category to variable
-            cursor.execute(f"select fb.fb_ID from food_bank fb where fb.Location='{location}'") #search for the Food Bank ID for a certain location and store it in the cursor
-            temp = cursor.fetchall() #Store the cursor data in a temporary variable
+            # pulls user input and removes trailing new_lines/spaces
+            item_name = iteminput.get().strip()         #Assign item name to variable
+            quantity = (quantityinput.get().strip())    #Assign quantity to variable
+            location = locationinput.get().strip()      #Assign location to variable
+            units = unitsInput.get().strip()            #Assign units to variable
+            category = categoryinput.get().strip()      #Assign category to variable
+
+            # search for the Food Bank ID for a certain location and store it in the cursor
+            cursor.execute(f"select fb.fb_ID from food_bank fb where fb.Location='{location}'")
+            temp = cursor.fetchall()        #Store the cursor data in a temporary variable
+
             if (category != "" and item_name != "" and units != "" and quantity != "" and location != ""): #Checks if all input fields from the tkinter window are non empty
                 if(quantity.isdigit()):
-                    quantity = int(quantity) #convert the quantity to an int
-                    if (quantity >= 0): #if the quantity is greater than 0, we can continue processing the item addtion
-                        if (temp != []): #If the foodBank ID list is not empty, we can continue since the food bank exists
-                            fb_id = int(temp[0][0]) #assign the food bank ID from the temp variable to a new variable
+                    quantity = int(quantity)            #convert the quantity to an int
+                    if (quantity >= 0):                 #if the quantity is greater than 0, we can continue processing the item addtion
+                        if (temp != []):                #If the foodBank ID list is not empty, we can continue since the food bank exists
+                            fb_id = int(temp[0][0])     #assign the food bank ID from the temp variable to a new variable
                             cursor.execute(
                                 f"select * from food_item fi where fi.Item_name = '{item_name}' and fi.units = '{units}' and fi.location = '{location}' and fi.fb_ID = {fb_id}") #retrieve all entries from the databse where the current item may exist
-                            result = cursor.fetchall() #store SQL data in a variable
+                            result = cursor.fetchall()              #store SQL data in a variable
                             if (result == []): #if the result is empty, this item does not exist so we can continue insertion
                                 cursor.execute(f"select MAX(fi.fd_ID) from food_item fi") #select the max food item ID so a brand new unique item ID can be generated
-                                temp = cursor.fetchall() #fetch data into a temp variable
-                                key = 1 #initialize food item ID to 1
-                                if (temp != []): #if the temp var is not empty convert into an int and increment by 1 to get a new unique ID 
-                                    key = int(temp[0][0]) + 1 #if the list is empty there is  nothing in the data base and the food ID will start at 1
+                                temp = cursor.fetchall()            #fetch data into a temp variable
+                                key = 1                             #initialize food item ID to 1
+                                if (temp != []):                    #if the temp var is not empty convert into an int and increment by 1 to get a new unique ID
+                                    key = int(temp[0][0]) + 1       #if the list is empty there is nothing in the data base and the food ID will start at 1
                                 cursor.execute(
                                     f"insert into foodforyou.food_item values ('{item_name}', '{category}', {quantity}, '{units}', '{location}', {int(fb_id)}, {key})") #insert the data into the database cursor
-                                connection.commit() #commit the data to the database so it can be written to disk.
-                                messagebox.showinfo("Success", "Item added") #indicate that the operation was successfully completed.
+                                connection.commit()                 #commit the data to the database so it can be written to disk.
 
-                            else:  #show an error indicating the item is already in the database.
+                                self.screen.destroy()               # Upon sucessful completion destroy the window
+                                messagebox.showinfo("Success", "Item added")  # indicate that the operation was successfully completed.
+
+                            else:        #show an error indicating the item is already in the database.
                                 messagebox.showerror("ERROR",
-                                                    "This item appears to exist in the database, please find entry and modify.") 
-                        else: #show that the location is not valid
+                                                    "This item appears to exist in the database, please find entry and modify.")
+                                return     # error checking -> doesn't allow user to change, still views FB screen
+                        else:           #show that the location is not valid
                             messagebox.showerror("ERROR", "Location is not valid, please pick valid location.")
-                    else: #tell user to use a positive quantity
+                            return
+                    else:               #tell user to use a positive quantity
                         messagebox.showerror("ERROR", "Enter a non-negative quantity.")
+                        return
                 else:
                     messagebox.showerror("ERROR", "Quantity must be an integer.")
-            else: #if if any fields are empty, we will prompt the food bank staff to re-enter the information.
+                    return
+            else:                       #if any fields are empty, we will prompt the food bank staff to re-enter the information.
                 messagebox.showerror("ERROR", "Please enter all fields to insert an item.")
-            self.screen.destroy() #Upon completion destroy the window
+                return
 
         submitButton = ttk.Button(self.screen, text="Save changes", width=15, command=saveChanges) #set attributes of submit button
         submitButton.place(x=(self.swidth) / 2 - 60, y=250) #place the submit button
@@ -188,7 +198,7 @@ class UpdateItem:
         locationinput.configure(state="disabled")       #makes the text field read-only
 
         # location input (only for moving item, so placement will be later)
-        locationDD = ttk.Combobox(screen, values=self.locations, font=(font, 8))
+        locationDD = ttk.Combobox(screen, values=self.locations, font=(font, 8),state="readonly")
 
         #allow users to save their changes
         submitButton = ttk.Button(screen, text="Save changes", width=15)
@@ -199,14 +209,15 @@ class UpdateItem:
 
 
         # ------------------------------ modification functions -----------------------------------------------
-        def compareItems(item1, item2):
+        def compareItems(item1:list, item2:list):
             """
             This function compares two items in the database and ensures they are the same so they can be merged 
             upon moving an item that already exists in another database.
             """
-            name = (item1[0] == item2[0]) #create bool for if the item names are equal
-            category = (item1[1] == item2[1]) #create a bool for if the categories are the samee
-            units = (item1[3] == item2[3]) #create a bool for if the units are the same
+            print("compare items input types ", type(item1), type(item2))
+            name = (item1[0] == item2[0])       #create bool for if the item names are equal
+            category = (item1[1] == item2[1])   #create a bool for if the categories are the samee
+            units = (item1[3] == item2[3])      #create a bool for if the units are the same
             return (name and category and units) #use boolean algebra to determine if the items are the same
 
         def saveChanges():
@@ -216,15 +227,15 @@ class UpdateItem:
             will not be executed, and a window will be shown to display what the error is to the food bank staff.
             """
             # If one or more required field is empty, show error
-            operation = self.screenopt.get() #obtain the operation so the correct code can be executed.
+            operation = self.screenopt.get()        #obtain the operation so the correct code can be executed.
             cursor.execute(f"select fb.fb_id from food_bank fb where fb.Location = '{location}'") #obtain the food bank id of the location from the database.
             fb_id = [int(i[0]) for i in cursor.fetchall()][0] #store the food bank ID in a variable
-            if (operation == 'update'): #if the update operation is specified execute code below
+            if (operation == 'update'):              #if the update operation is specified execute code below
                 if(quantityinput.get().isdigit()):
                     if (int(quantityinput.get()) < 0): #verify quantity to be updated is non-negative
                         messagebox.showerror("ERROR", "Quantity must be non-negative") #show message if quantity is negative
-                    else: #continue if quantity is correct
-                        currentfb_id = fb_id #set new var for fb_id
+                    else:                           #continue if quantity is correct
+                        currentfb_id = fb_id        #set new var for fb_id
                         cursor.execute(
                             f"select * from food_item fi where fi.Item_name='{item}' and fi.fb_id={currentfb_id} and fi.units = '{units}'") #select all columns for food item matching input from database
                         origEntry = cursor.fetchall()[0] #set database result to variable
@@ -312,7 +323,7 @@ class UpdateItem:
                 else:
                     messagebox.showerror("ERROR", "Quantity must be an integer.")
             elif (operation == 'delete'): #if operation is delete do code below
-                cursor.execute(f"delete from food_item where fd_id = {food_id}") #delete all columns matching current food id
+                cursor.execute(f"delete from food_item where fd_id = {food_id}") #delete all rows matching current food id
                 connection.commit() #commit changes to disk
                 messagebox.showinfo("Success", "Item successfully removed.") #show message indicating success
             else:
@@ -356,7 +367,7 @@ class UpdateItem:
         # when screenopt is changed, calls showscreen to change the screen
         self.screenopt.trace('w', showScreen)
         #holds the screen options
-        tabControl = ttk.Combobox(screen, textvariable=self.screenopt, values=options, font=(font, 12), width=7)
+        tabControl = ttk.Combobox(screen, textvariable=self.screenopt, values=options, font=(font, 12), width=7, state="readonly")
         tabControl.pack(pady=10)
         #add action/function to submit button
         submitButton.configure(command=saveChanges)
@@ -365,7 +376,7 @@ class UpdateItem:
 
 class StaffGUI:
     """ class StaffGUI
-        Displays the food item database as a table, and allows the user to:
+        Displays the food item table, and allows the user to:
             - Search/Filter: search by item ID, search by item name, filter by location, sort by ascending quantity
             - Update Item: update quantity, move item to another location, or delete an item
             - Add Item: Creates a new food item (user must input food item, category, quantity, units, location)
@@ -470,7 +481,7 @@ class StaffGUI:
 
         # widgets to filter by location
         ttk.Label(root, text="Sort by location").place(x=675, y=230)
-        LocationFilter = ttk.Combobox(root, values=self.locations)
+        LocationFilter = ttk.Combobox(root, values=self.locations, state="readonly")
         LocationFilter.place(x=675, y=250)
 
         # widgets to sort by quantity
