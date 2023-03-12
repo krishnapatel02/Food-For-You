@@ -21,8 +21,8 @@ References:
 
 from utilffy import *
 
-connection = None
-cursor = None
+connection = None #initialize connection to none
+cursor = None #initialize cursor to none
 
 class NewItem:
     """ class NewItem(parent)
