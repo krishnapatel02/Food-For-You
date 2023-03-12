@@ -44,7 +44,7 @@ neighborhood_options = [row[0] for row in c.fetchall()]
 
 # create the GUI window
 root = tk.Tk()
-root.title("Food Finder")
+root.title("Food-For-You Recipient")
 # window size
 root.geometry("430x540")
 root.resizable(False, False)
