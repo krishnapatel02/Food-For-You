@@ -345,6 +345,7 @@ class StaffGUI:
         self.ascSort = BooleanVar()
         self.locations = fetchLocations(cursor)
         use_theme(root)
+        
         #-----------------------------setting up background---------------------------------------
         global fetchData
         #structured to catch errors if user does not have background images,
