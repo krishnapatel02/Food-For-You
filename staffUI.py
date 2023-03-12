@@ -231,7 +231,7 @@ class UpdateItem:
                         origQuantity = origEntry[2] #set variable for original quantity
 
                         cursor.execute(
-                            f"update foodforyou.food_item set Item_name='{iteminput.get().strip()}', Quantity={int(quantityinput.get().strip)}, Units='{unitsInput.get().strip()}', Location='{location}', fb_id='{currentfb_id}' where fd_ID='{int(food_id)}'")
+                            f"update foodforyou.food_item set Item_name='{iteminput.get().strip()}', Quantity={int(quantityinput.get())}, Units='{unitsInput.get().strip()}', Location='{location}', fb_id='{currentfb_id}' where fd_ID='{int(food_id)}'")
                             #update entry in food_item table to set quantity of current food item to its new quantity
                         if (int(quantityinput.get()) < origQuantity): #if the quantity set in the database was less than original record it to the outgoing database for record keeping
                             cursor.execute(
@@ -315,6 +315,8 @@ class UpdateItem:
                 cursor.execute(f"delete from food_item where fd_id = {food_id}") #delete all columns matching current food id
                 connection.commit() #commit changes to disk
                 messagebox.showinfo("Success", "Item successfully removed.") #show message indicating success
+            else:
+                messagebox.showerror("ERROR", "Select a valid option from the dropdown.")
             fetchData() #refresh screen
             screen.destroy() #destroy child window
 
