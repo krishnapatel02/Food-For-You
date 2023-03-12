@@ -87,31 +87,34 @@ class NewItem:
             cursor.execute(f"select fb.fb_ID from food_bank fb where fb.Location='{location}'") #search for the Food Bank ID for a certain location and store it in the cursor
             temp = cursor.fetchall() #Store the cursor data in a temporary variable
             if (category != "" and item_name != "" and units != "" and quantity != "" and location != ""): #Checks if all input fields from the tkinter window are non empty
-                quantity = int(quantity) #convert the quantity to an int
-                if (quantity >= 0): #if the quantity is greater than 0, we can continue processing the item addtion
-                    if (temp != []): #If the foodBank ID list is not empty, we can continue since the food bank exists
-                        fb_id = int(temp[0][0]) #assign the food bank ID from the temp variable to a new variable
-                        cursor.execute(
-                            f"select * from food_item fi where fi.Item_name = '{item_name}' and fi.units = '{units}' and fi.location = '{location}' and fi.fb_ID = {fb_id}") #retrieve all entries from the databse where the current item may exist
-                        result = cursor.fetchall() #store SQL data in a variable
-                        if (result == []): #if the result is empty, this item does not exist so we can continue insertion
-                            cursor.execute(f"select MAX(fi.fd_ID) from food_item fi") #select the max food item ID so a brand new unique item ID can be generated
-                            temp = cursor.fetchall() #fetch data into a temp variable
-                            key = 1 #initialize food item ID to 1
-                            if (temp != []): #if the temp var is not empty convert into an int and increment by 1 to get a new unique ID 
-                                key = int(temp[0][0]) + 1 #if the list is empty there is  nothing in the data base and the food ID will start at 1
+                if(quantity.isdigit()):
+                    quantity = int(quantity) #convert the quantity to an int
+                    if (quantity >= 0): #if the quantity is greater than 0, we can continue processing the item addtion
+                        if (temp != []): #If the foodBank ID list is not empty, we can continue since the food bank exists
+                            fb_id = int(temp[0][0]) #assign the food bank ID from the temp variable to a new variable
                             cursor.execute(
-                                f"insert into foodforyou.food_item values ('{item_name}', '{category}', {quantity}, '{units}', '{location}', {int(fb_id)}, {key})") #insert the data into the database cursor
-                            connection.commit() #commit the data to the database so it can be written to disk.
-                            messagebox.showinfo("Success", "Item added") #indicate that the operation was successfully completed.
+                                f"select * from food_item fi where fi.Item_name = '{item_name}' and fi.units = '{units}' and fi.location = '{location}' and fi.fb_ID = {fb_id}") #retrieve all entries from the databse where the current item may exist
+                            result = cursor.fetchall() #store SQL data in a variable
+                            if (result == []): #if the result is empty, this item does not exist so we can continue insertion
+                                cursor.execute(f"select MAX(fi.fd_ID) from food_item fi") #select the max food item ID so a brand new unique item ID can be generated
+                                temp = cursor.fetchall() #fetch data into a temp variable
+                                key = 1 #initialize food item ID to 1
+                                if (temp != []): #if the temp var is not empty convert into an int and increment by 1 to get a new unique ID 
+                                    key = int(temp[0][0]) + 1 #if the list is empty there is  nothing in the data base and the food ID will start at 1
+                                cursor.execute(
+                                    f"insert into foodforyou.food_item values ('{item_name}', '{category}', {quantity}, '{units}', '{location}', {int(fb_id)}, {key})") #insert the data into the database cursor
+                                connection.commit() #commit the data to the database so it can be written to disk.
+                                messagebox.showinfo("Success", "Item added") #indicate that the operation was successfully completed.
 
-                        else:  #show an error indicating the item is already in the database.
-                            messagebox.showerror("ERROR",
-                                                 "This item appears to exist in the database, please find entry and modify.") 
-                    else: #show that the location is not valid
-                        messagebox.showerror("ERROR", "Location is not valid, please pick valid location.")
-                else: #tell user to use a positive quantity
-                    messagebox.showerror("ERROR", "Enter a non-negative quantity.")
+                            else:  #show an error indicating the item is already in the database.
+                                messagebox.showerror("ERROR",
+                                                    "This item appears to exist in the database, please find entry and modify.") 
+                        else: #show that the location is not valid
+                            messagebox.showerror("ERROR", "Location is not valid, please pick valid location.")
+                    else: #tell user to use a positive quantity
+                        messagebox.showerror("ERROR", "Enter a non-negative quantity.")
+                else:
+                    messagebox.showerror("ERROR", "Quantity must be an integer.")
             else: #if if any fields are empty, we will prompt the food bank staff to re-enter the information.
                 messagebox.showerror("ERROR", "Please enter all fields to insert an item.")
             self.screen.destroy() #Upon completion destroy the window
