@@ -13,13 +13,10 @@ Modifications:
     March 1, 2023: created file and implemented get_locations(), get_category(), and get_hours(), LG
     March 3, 2023: created the DonorGUI class constructor
     March 4, 2023: implemented the query() method of the DonorGUI class
-    March 7, 2023: implemented the get_food_bank_info, is_open(), and show_results() methods of the DonorGUI class
+    March 7, 2023: implemented the get_food_bank_info, is_open(), and format_results() methods of the DonorGUI class
     March 10, 2023: implemented the write_file method of the DonorGUI class
     March 11, 2023: cleaned up code and added comments
     March 12, 2023: added more comments
-
-
-
 """
 
 # libraries used
@@ -87,7 +84,7 @@ def get_hours(cursor, fb_id):
     # checks that fb_id is an integer
     if type(fb_id) is not int:
         print("ERROR: food bank ID must be an int")
-        return
+        return [('', '')]
 
     # retrieves name of the current day of the week
     day = datetime.datetime.today().strftime('%A')
@@ -114,6 +111,8 @@ class DonorGUI:
         # creates a tkinter window
         self.interface = Tk()
         interface = self.interface
+        # use the theme from utiliffy.py
+        use_theme(interface, "12")
 
         # sets the window size and title
         self.interface.geometry('430x540')
@@ -170,7 +169,7 @@ class DonorGUI:
             function which creates the tkinter window
             """
             # creates the location dropdown and displays it in the tkinter window
-            neighborhood_label = Label(interface, text='search by neighborhood: ')
+            neighborhood_label = ttk.Label(interface, text='search by neighborhood: ')
             neighborhood_menu = OptionMenu(interface, self.location, *self.all_locations)
             neighborhood_label.pack()
             neighborhood_label.place(relx=0.3, rely=0.3, anchor=CENTER)
@@ -178,7 +177,7 @@ class DonorGUI:
             neighborhood_menu.place(relx=0.7, rely=0.3, anchor=CENTER)
 
             # creates the food category dropdown and displays it in the tkinter window
-            category_label = Label(interface, text='search by food category: ')
+            category_label = ttk.Label(interface, text='search by food category: ')
             category_menu = OptionMenu(interface, self.category, *self.all_categories)
             category_label.pack()
             category_label.place(relx=0.3, rely=0.4, anchor=CENTER)
@@ -186,29 +185,29 @@ class DonorGUI:
             category_menu.place(relx=0.7, rely=0.4, anchor=CENTER)
 
             # creates the checkboxes for the display variables and displays them in the tkinter window
-            open_label = Label(interface, text='show only open now')
-            open_check = Checkbutton(interface, variable=self.open_now)
+            open_label = ttk.Label(interface, text='show only open now')
+            open_check = ttk.Checkbutton(interface, variable=self.open_now)
             open_label.pack()
             open_label.place(relx=0.35, rely=0.55, anchor=CENTER)
             open_check.pack()
             open_check.place(relx=0.65, rely=0.55, anchor=CENTER)
 
-            hours_label = Label(interface, text='show hours for today')
-            hours_check = Checkbutton(interface, variable=self.hours)
+            hours_label = ttk.Label(interface, text='show hours for today')
+            hours_check = ttk.Checkbutton(interface, variable=self.hours)
             hours_label.pack()
             hours_label.place(relx=0.35, rely=0.60, anchor=CENTER)
             hours_check.pack()
             hours_check.place(relx=0.65, rely=0.60, anchor=CENTER)
 
-            address_label = Label(interface, text='show address')
-            address_check = Checkbutton(interface, variable=self.address)
+            address_label = ttk.Label(interface, text='show address')
+            address_check = ttk.Checkbutton(interface, variable=self.address)
             address_label.pack()
             address_label.place(relx=0.35, rely=0.65, anchor=CENTER)
             address_check.pack()
             address_check.place(relx=0.65, rely=0.65, anchor=CENTER)
 
-            phone_label = Label(interface, text='show phone number')
-            phone_check = Checkbutton(interface, variable=self.phone)
+            phone_label = ttk.Label(interface, text='show phone number')
+            phone_check = ttk.Checkbutton(interface, variable=self.phone)
             phone_label.pack()
             phone_label.place(relx=0.35, rely=0.70, anchor=CENTER)
             phone_check.pack()
@@ -286,7 +285,7 @@ class DonorGUI:
         # executes and returns SQL query
         self.cursor.execute(query)
         results = self.cursor.fetchall()
-        self.show_results(results)
+        self.format_results(results)
 
     def get_food_bank_info(self, fb_id):
         """
@@ -332,9 +331,11 @@ class DonorGUI:
             now_open = (now >= opening) and (now <= closing)
         return now_open
 
-    def show_results(self, results):
+    def format_results(self, results):
         """
         function which formats the results of the SQL query
+
+        parameter: results
         """
 
         fb_ids = []
@@ -387,6 +388,9 @@ class DonorGUI:
     def write_file(self, fb_ids, max_lengths):
         """
         function which writes results to file
+
+        parameters: Food Bank ID's (list)
+                    [] (dictionary)
         """
 
         # strips location and category of all spaces
