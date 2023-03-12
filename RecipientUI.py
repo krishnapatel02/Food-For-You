@@ -31,7 +31,7 @@ import datetime
 from utilffy import *
 
 # Connect to database
-connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
+connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", port, "foodforyou")
 c = connection.cursor()
 
 # get the food options from the database
@@ -190,6 +190,13 @@ def writetofile(filename, results, open_stat, open_time):
             return
     # Open filename as f
     with open(filename, 'w') as f:
+        # Prints a informing statement for the User to understand the ordering of entries
+        f.write(f"Entries are listed in Descending order by Quantity.\n"
+                f"Entries at the top of the table have the greatest availabilty.\n"
+                f"Entries marked as Low Stock have 20 units or less available.")
+        print(f"Entries are listed in Descending order by Quantity.\n"
+                f"Entries at the top of the table have the greatest availabilty.\n"
+                f"Entries marked as Low Stock have 20 units or less available.")
         # Calculate the max length of each field
         # Default values for open and close max
         maxopen = 5
@@ -282,6 +289,10 @@ def writetofile(filename, results, open_stat, open_time):
 
             openh = ""
 
+            # If the food is unavailable, don't display it
+            if stat == "Unavailable":
+                break
+
             # Check if there is an open food bank
             if open_stat != []:
                 # If location is in open_stat, it's open now
@@ -314,6 +325,7 @@ def writetofile(filename, results, open_stat, open_time):
             # Create space buffers for open and close
             ospace = (maxopen + 5 - len(openh)) * " "
             cspace = (maxclose + 5 - len(closeh)) * " "
+
 
             # Now we print everything out, but must specify based on what was selected
             # If we only want to see open now
