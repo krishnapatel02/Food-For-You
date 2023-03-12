@@ -17,7 +17,6 @@ from tkinter import messagebox
 
 font = "Helvetica"
 searchInputSize = "9"
-regFontSize = "11"
 
 port = 3441     #holds the database port number
 user = "jerryp" #set username for database to variable
@@ -25,7 +24,7 @@ password = "111" #set password for database to variable
 host = "ix-dev.cs.uoregon.edu" #set hostname to variable
 database = "foodforyou" #set database name for variable
 
-def use_theme(window:Tk):
+def use_theme(window:Tk, regFontSize):
     """ use_theme(window)
     Applies the theme to the inputted 'window'
     Note: can change the font (font) and size (regFontSize) from the global variables

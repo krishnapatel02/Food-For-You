@@ -201,20 +201,21 @@ class UpdateItem:
         locationDD = ttk.Combobox(screen, values=self.locations, font=(font, 8),state="readonly")
 
         #allow users to save their changes
+        fillerlbl = ttk.Label(screen)
+
         submitButton = ttk.Button(screen, text="Save changes", width=15)
         submitButton.place(x=(self.swidth) / 2 - 60, y=250)
 
-        fillerlbl = ttk.Label(screen)
+
         movelbl = ttk.Label(screen, text="location to move items to")
 
 
         # ------------------------------ modification functions -----------------------------------------------
-        def compareItems(item1:list, item2:list):
+        def compareItems(item1:tuple, item2:tuple)->bool:
             """
             This function compares two items in the database and ensures they are the same so they can be merged 
             upon moving an item that already exists in another database.
             """
-            print("compare items input types ", type(item1), type(item2))
             name = (item1[0] == item2[0])       #create bool for if the item names are equal
             category = (item1[1] == item2[1])   #create a bool for if the categories are the samee
             units = (item1[3] == item2[3])      #create a bool for if the units are the same
@@ -393,7 +394,7 @@ class StaffGUI:
         self.root.geometry(f'{self.screenWidth}x540')
         self.ascSort = BooleanVar()
         self.locations = fetchLocations(cursor)         #grab exisiting locations
-        use_theme(root)
+        use_theme(root, "10")
 
         #-----------------------------setting up background---------------------------------------
         global fetchData #set fetchData functiont o be global so screen can be refreshed by any class
@@ -534,7 +535,6 @@ class StaffGUI:
 connection = connectToDatabase() #create connection to database using function from utilffy.py
 #connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
 cursor = connection.cursor() #initialize cursor to database
-print(type(cursor))
 
 
 StaffGUI() #start tkinter interface
