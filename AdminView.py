@@ -28,11 +28,11 @@ import os
 import datetime
 
 
-FBconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
+FBconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", port, "foodforyou")
 #FBconnection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
 FBcursor = FBconnection.cursor()
 
-Dconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
+Dconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", port, "foodforyou")
 #Dconnection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
 Dcursor = Dconnection.cursor()
 
@@ -215,7 +215,16 @@ class FBView:
                     return
 
                 neighborhood = NeighborhoodInput.get()              #holds the user inputted neighborhood
+                if neighborhood == None:            #validates they insert a neighborhood
+                    messagebox.showerror("ERROR", "Please input a neighborhood")
+
                 FBName = FBNameInput.get()                          #holds the user inputter food bank name
+                if FBName == None:              #validates they insert a food bank name
+                    messagebox.showerror("ERROR", "Please input a Food Bank name")
+
+                if newloc == None:              #validates they insert a food bank location
+                    messagebox.showerror("ERROR", "Please input a Food Bank location")
+
                 FBcursor.execute(f"select MAX(fb.fb_ID) from food_bank fb")     #grabs max exisiting food bank id
                 maxfb_ID = FBcursor.fetchall()                                  #holds such above
                 FBcursor.execute(f"select MAX(fi.fd_ID) from food_item fi")     #grabs max exisiting food item id
@@ -229,12 +238,13 @@ class FBView:
                     newfb_ID = int(maxfb_ID[0][0]) + 1
                 else:                   # if no existing food item already
                     newfb_ID = 1
-                FBcursor.execute(f"select * from food_bank fb where fb.Location = '{FBName}'")  #pulls existing food banks with such name
-                locationCheck = FBcursor.fetchall()
-                FBcursor.execute(f"select * from food_bank fb where fb.Address = '{newloc}'")   #pulls existing food banks with such address
-                addressCheck = FBcursor.fetchall()
-                if(openTimes != None):
-                    if (locationCheck == [] and addressCheck == []):
+                FBcursor.execute(f"select * from food_bank fb where fb.Location = '{FBName}'")
+                locationCheck = FBcursor.fetchall()         #pulls existing food banks with such name
+                FBcursor.execute(f"select * from food_bank fb where fb.Address = '{newloc}'")
+                addressCheck = FBcursor.fetchall()          #pulls existing food banks with such address
+                if(openTimes != None):                      #verifies not all days are closed
+                    if (locationCheck == [] and addressCheck == []):        #verifies no similar food bank name or location already exists
+                        # adds food bank to database
                         FBcursor.execute(f"insert into foodforyou.food_bank values('{FBName}', " + \
                                         f"'{newloc}', '{neighborhood}', '{phone_number}', '{newfb_ID}')")
                         FBcursor.execute(
@@ -243,14 +253,15 @@ class FBView:
                             f"'{openTimes[6]}', '{openTimes[7]}','{openTimes[8]}', '{openTimes[9]}'," + \
                             f"'{openTimes[10]}', '{openTimes[11]}','{openTimes[12]}', '{openTimes[13]}')")
                         nonlocal filedata
+                        # imports data from file to Food Item database
                         for line in filedata:
                             item_name = line[0]
                             category = line[1]
                             quantity = int(line[2])
-                            # units = line[3]
+                            units = line[3]
                             FBcursor.execute(f"select * from food_item fi where fi.Item_name='{item_name}' and fi.units = '{units}' and fi.category = '{category}' and fi.location = '{FBName}'")
+                                    #checks
                             duplicateCheck = FBcursor.fetchall()
-                            #print(duplicateCheck)
                             if(duplicateCheck==[]):
                                 FBcursor.execute(
                                     f"insert into foodforyou.food_item values ('{item_name}', '{category}', {quantity}, '{units}', '{FBName}', {int(newfb_ID)}, {maxfd_ID})")
@@ -264,16 +275,20 @@ class FBView:
 
                         FBconnection.commit()
                         fetchData(newfb_ID)
+                        newFBScreen.destroy()
                     else:
                         messagebox.showerror("ERROR", "Food bank with this name or address appears to already exist.")
+                        return
                 else:
                     messagebox.showerror("ERROR", "One of the open times is after the close time.")
+                    return
             else:
                 messagebox.showerror("ERROR", "The food bank times are all closed, a food bank must have at least one open day to be added.")
+                return
                 #Error message for always closed food bank
 
             # closes screen
-            newFBScreen.destroy()
+
 
         #----------------------setting up screen for "New Food bank"---------
         newFBScreen = Toplevel(self.root)
@@ -296,22 +311,22 @@ class FBView:
         ttk.Label(newFBScreen, text="Close", font=(font, 9)).place(x=25, y=100)
 
         # text input to insert food bank street address
-        ttk.Label(newFBScreen, text="Insert Street Address").place(x=75, y=160)
+        ttk.Label(newFBScreen, text="Street Address: ").place(x=75, y=160)
         locationInput = ttk.Entry(newFBScreen, width=30)
         locationInput.place(x=75, y=185)
 
         # text input to insert food bank name
-        ttk.Label(newFBScreen, text="Insert Food Bank Name").place(x=75, y=225)
+        ttk.Label(newFBScreen, text="Food Bank Name:").place(x=75, y=225)
         FBNameInput = ttk.Entry(newFBScreen, width=30)
         FBNameInput.place(x=75, y=250)
 
         # text input to insert neighborhood
-        ttk.Label(newFBScreen, text="Neighborhood").place(x=300, y=160)
+        ttk.Label(newFBScreen, text="Neighborhood:").place(x=300, y=160)
         NeighborhoodInput = ttk.Entry(newFBScreen, width=30)
         NeighborhoodInput.place(x=300, y=185)
 
         # text input to insert phone neighborhood
-        ttk.Label(newFBScreen, text="Phone Number").place(x=300, y=225)
+        ttk.Label(newFBScreen, text="Phone Number:").place(x=300, y=225)
         PhoneNumInput = ttk.Entry(newFBScreen, width=30)
         PhoneNumInput.place(x=300, y=250)
         # text label describe phone number format
@@ -364,6 +379,7 @@ class FBView:
         submitButton = ttk.Button(newFBScreen, text="Save changes", width=15, command=saveChanges)
         submitButton.place(x=600, y=250)
 
+        newFBScreen.resizable(0, 0)                   #make the window size not adjustable
         newFBScreen.mainloop()
 
     def checkPhoneNum(self, num:str)->bool:

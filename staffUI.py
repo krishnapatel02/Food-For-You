@@ -121,6 +121,8 @@ class NewItem:
 
         submitButton = ttk.Button(self.screen, text="Save changes", width=15, command=saveChanges) #set attributes of submit button
         submitButton.place(x=(self.swidth) / 2 - 60, y=250) #place the submit button
+        self.screen.resizable(0, 0)                   #make the window size not adjustable
+
 
 class UpdateItem:
     """ class UpdateItem(parent, item, quantity, units, location, food_id)
@@ -356,6 +358,8 @@ class UpdateItem:
         tabControl.pack(pady=10)
         #add action/function to submit button
         submitButton.configure(command=saveChanges)
+        self.screen.resizable(0, 0)       #make the window size not adjustable
+
 
 class StaffGUI:
     """ class StaffGUI
@@ -522,10 +526,12 @@ class StaffGUI:
         fetchData()
         table.pack(fill=BOTH, expand=1)
         root.protocol("WM_DELETE_WINDOW", onClose)
+
+        self.root.resizable(0, 0)                   #make the window size not adjustable
         root.mainloop()
 
 
-connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou") #create connection to database using function from utilffy.py
+connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", port, "foodforyou") #create connection to database using function from utilffy.py
 #connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
 cursor = connection.cursor() #initialize cursor to database
 
