@@ -16,7 +16,7 @@ class NewItem:
         self.categories = fetchCategory(cursor)     #holds list of categories in databse
         #--------------------------------------------------------------
 
-        #============== holds what the user inputs =================
+        #============== holds user input of the new item ==========
         self.quantity_to_update = IntVar()
         self.units_to_update = StringVar()
         #===========================================================

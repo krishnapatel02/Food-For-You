@@ -1,20 +1,33 @@
-from tkinter import *
-from tkinter import ttk
+"""
+Name: AdminView.py
+Created: 3/5/2023
+Authors: Katherine Smirnov, Krishna Patel
+
+Provides a view of the food bank log, and allows for a new food bank insertion to the database.
+
+Modifications:
+    3/5/2023: Created validateFile() to check for headers and quantity -KS
+              Added timepicker function for inputting times for newFB -KS
+    3/8/2023: Added tabs to view FB and data log -KS
+    3/9/2023: Added export buttons -KS
+    3/10/2023: Cleaned up UI -KS
+               Add export function -KP
+               Added error checking for times -KP
+    3/11/2023: Add neighborhood and phone number input to newFB -KS
+               Added validate phone number function -
+
+References:
+    EasyA, admin.py from Jerry Pi
+        -Recycled code to display database into table and update items from data to database
+"""
+
 from tkinter import filedialog
-import tkinter.messagebox as messagebox
 import timepicker as time
 import csv
 import os
 from utilffy import *
 
-"""
-README!!!!!!!!!
-for db: write saveChanges()
-        view data on main screen
-for KS:
-allow times to be none (store is closed)
-verify that all times are times are inputted before submit
-"""
+
 
 FBconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
 #FBconnection = connectToDatabase("krishna", "pass", "127.0.0.1", 3306, "foodforyou")
@@ -24,20 +37,16 @@ Dconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, 
 #Dconnection = connectToDatabase("krishna", "pass", "127.0.0.1", 3306, "foodforyou")
 Dcursor = Dconnection.cursor()
 
-
 class FBView:
+    """FBView: class
+        GUI which allows the user to insert a new food bank, and view the newly inserted data.
+    """
     def __init__(self, parent):
         #----------------------setting up screen for "New Food Bank"---------
         self.root = Frame(parent, bg="white")
         root = self.root
-        self.foodItemSearchText = StringVar()
-        self.ascSort = BooleanVar()
-        self.loc_to_update = StringVar()
-        self.locations = fetchLocations(FBcursor)
 
-        global font
         global fetchData
-
 
         def fetchData(newFBID):
             search(newFBID)
@@ -65,23 +74,21 @@ class FBView:
             food_id = row[3]
             location = row[4]
 
-            # UpdateItem(self.root, item, quantity, units, location, food_id)
-
         #================== user widgets =============================================================
         AddFBButton = ttk.Button(root, text="New Food Bank +", width=20, command=self.addFB)
         AddFBButton.place(x=675, y=200)
 
-
-        #================== view table =============================================================
-        viewFrame = Frame(root, bd=5, relief='ridge', bg='wheat')
+        #================== view table from database ==================================================
+            # (credit due to Jerry Pi)
+        viewFrame = Frame(root, bd=5, relief='ridge', bg='wheat')   #frame to hold the table
         viewFrame.place(x=30, y=110, width=600, height=350)
-        xScroll = Scrollbar(viewFrame, orient=HORIZONTAL)
+        xScroll = Scrollbar(viewFrame, orient=HORIZONTAL)   #allows the user to scroll
         yScroll = Scrollbar(viewFrame, orient=VERTICAL)
         table = ttk.Treeview(viewFrame, columns=(
             'item_to_filter', 'quantity_to_filter', 'units', 'fid_to_filter', 'location_to_filter'),
                              xscrollcommand=xScroll.set,
                              yscrollcommand=yScroll.set)
-
+        #table column headers
         table.heading("item_to_filter", text="item")
         table.heading("quantity_to_filter", text="quantity")
         table.heading("units", text="units")
@@ -95,18 +102,23 @@ class FBView:
         table.column("location_to_filter", width=100)
         table['show'] = 'headings'
 
-        # get all values and pack the table on to the screen
-
+        #connect a mouse click to the update function
         table.bind('<ButtonRelease-1>', update)
-        # fetchData()
+        # get all values and pack the table on to the screen
         table.pack(fill=BOTH, expand=1)
+        #=============================================================================================
 
-    
 
-    # Add new food bank screen
     def addFB(self):
-        # if succesful return a dictionary of the csv
+        """ addFB()
+        Displays a new screen which asks users for the new food bank information
+            (hours, location, contact information, food item data), and updates the database.
+        - Called when "New Food Bank +" button is selected.
+        """
+        filedata = []                        # holds data from file upload
+        imported_filename = StringVar()  # holds name of file uploaded, used as a textvariable in a label
         def compareTimes(timeDict:dict):
+            """TODO"""
             keys = timeDict.keys()
             formattedTime = []
             for key in keys:
@@ -121,35 +133,49 @@ class FBView:
                     formattedTime = None
                     break
             return formattedTime
-        
-        def validateFile(filepath):
-            # checking headers
+
+        def validateFile(filepath)->bool:
+            """validateFile(filepath)
+                Verifies the inserted file is of the correct format:
+                    - columns: "item", "category", "quantity", "units"
+                    - quantities are positive/zero digits
+                    - all rows/columns have data
+                Returns false if file was in incorrect format, else returns True.
+            """
             try:
+                # ---------- checking headers -------------
                 file = open(filepath, 'r')
                 expected = ["item", "category", "quantity", "units"] #columns of csv must match
 
-                dict_from_csv = list(csv.DictReader(file))          #turn csv into dictionary
-                if expected != [x for x in dict_from_csv[0].keys()]:
+                dict_from_csv = list(csv.DictReader(file))          #turns csv into dictionary
+                if expected != [x for x in dict_from_csv[0].keys()]:    #compares csv column names to expected headers
                     messagebox.showerror("File error", "Incorrect headers: expected 'item', 'category', 'quantity', 'units'")
-                    return -1
+                    return False
 
                 for i, item in enumerate(dict_from_csv):
+                    # ---------- validate quantity -------------
                     quant = item['quantity']
 
                     # checks if integer and non-negative
-                    # isdigit() also returns false if digit is negative
+                        # isdigit() also returns false if digit is negative
                     if not (quant.isdigit()):
                         messagebox.showerror("File error", "Invalid quantity (" + quant + ") on row " + str(i + 2))
-                        return -1
+                        return False
+
+                    # -------- checking for empty rows -----------
                     if (not item['item']) or (not item['category']) or (not item['quantity']) or (not item['units']):
                         messagebox.showerror("File error", "Empty values row " + str(i + 2))
-                        return -1
+                        return False
 
-                returnval = []
+                #turns dict_from_csv into a 2D-list (more readable for inserting to database)
+                dict_to_list= []
                 for x in dict_from_csv:
                     i, c, q, u = x.values()
-                    returnval.append((i, c, q, u))
-                return returnval
+                    # each row of dict_to_list is a row of the csv file
+                    dict_to_list.append((i, c, q, u))
+                nonlocal filedata
+                filedata = dict_to_list
+                return True
 
             except Exception as e:
                 print("Error:", e)
@@ -157,19 +183,22 @@ class FBView:
                                      "Having trouble uploading file. Please ensure the file uploaded is a CSV with the columns 'item', 'category' and 'quantity'")
 
         def fileUpload():
-            filepath = filedialog.askopenfilename()
-            filename, fextension = os.path.splitext(filepath)
+            """fileUpload()
+                Prompts user to input a file. Ensures the file is .csv and calls validateFile() to
+                    verify if inputted data is valid.
+            """
 
-            if fextension != '.csv':
-                messagebox.showerror("Incorrect File Type. Must be CSV")
+            filepath = filedialog.askopenfilename()             #prompts user for file
+            filename, fextension = os.path.splitext(filepath)   #splits filepath by its extension
+
+            if fextension != '.csv':        #verifies file is a .csv
+                messagebox.showerror("File Error", "Incorrect File Type. Must be CSV")
                 return
 
-            # check headers
-            global data
-            data = validateFile(filepath)
-            #was an error
-            if data == -1:
+            if validateFile(filepath) == False:  # validateFile() found an error in validating data from file
                 return
+
+            imported_filename.set("File upload: " + filepath.split("/")[-1]) #show which file uploaded in label
             print("Succesfully imported file")
 
         def saveChanges():
@@ -188,7 +217,7 @@ class FBView:
                      }
             openTimes = compareTimes(times)
             phone_number = PhoneNumInput.get()
-            
+
             if not self.checkPhoneNum(phone_number):
                 messagebox.showerror("ERROR", "Invalid phone number. Must be formatted as (XXX) XXX-XXXX")
                 return
@@ -225,7 +254,8 @@ class FBView:
                         f"'{openTimes[2]}', '{openTimes[3]}','{openTimes[4]}', '{openTimes[5]}'," + \
                         f"'{openTimes[6]}', '{openTimes[7]}','{openTimes[8]}', '{openTimes[9]}'," + \
                         f"'{openTimes[10]}', '{openTimes[11]}','{openTimes[12]}', '{openTimes[13]}')")
-                    for line in data:
+                    nonlocal filedata
+                    for line in filedata:
                         item_name = line[0]
                         category = line[1]
                         quantity = int(line[2])
@@ -241,20 +271,22 @@ class FBView:
             else:
                 messagebox.showerror("ERROR", "One of the open times is after the close time.")
 
-            # when finished up
-
+            # closes screen
             newFBScreen.destroy()
 
+        #----------------------setting up screen for "New Food bank"---------
         newFBScreen = Toplevel(self.root)
         newFBScreen.geometry("800x315")
         newFBScreen.configure(background='white')
 
+        #====================== user input widgets ======================
+        # user input button to upload file
         fileUploadButton = ttk.Button(newFBScreen, text="Upload Data", width=15, command=fileUpload)
         fileUploadButton.place(x=600, y=175)
+        # if a file is uploaded, displays the file name
+        ttk.Label(newFBScreen, textvariable=imported_filename, font=(font,9)).place(x=600, y=210)
 
-        submitButton = ttk.Button(newFBScreen, text="Save changes", width=15, command=saveChanges)
-        submitButton.place(x=600, y=225)
-
+        # text labels to prompt user to insert times
         ttk.Label(newFBScreen, text="Insert times").place(x=75, y=25)
         ttk.Label(newFBScreen, text="To indicate 'Closed', set the open and close times of the desired day equal.",
                   font=(font, 9), foreground="gray").place(x=350, y=25)
@@ -262,25 +294,31 @@ class FBView:
         ttk.Label(newFBScreen, text="Open", font=(font, 9)).place(x=25, y=75)
         ttk.Label(newFBScreen, text="Close", font=(font, 9)).place(x=25, y=100)
 
+        # text input to insert food bank street address
         ttk.Label(newFBScreen, text="Insert Street Address").place(x=75, y=160)
         locationInput = ttk.Entry(newFBScreen, width=30)
         locationInput.place(x=75, y=185)
 
+        # text input to insert food bank name
         ttk.Label(newFBScreen, text="Insert Food Bank Name").place(x=75, y=225)
         FBNameInput = ttk.Entry(newFBScreen, width=30)
         FBNameInput.place(x=75, y=250)
 
+        # text input to insert neighborhood
         ttk.Label(newFBScreen, text="Neighborhood").place(x=300, y=160)
         NeighborhoodInput = ttk.Entry(newFBScreen, width=30)
         NeighborhoodInput.place(x=300, y=185)
 
+        # text input to insert phone neighborhood
         ttk.Label(newFBScreen, text="Phone Number").place(x=300, y=225)
         PhoneNumInput = ttk.Entry(newFBScreen, width=30)
         PhoneNumInput.place(x=300, y=250)
+        # text label describe phone number format
         ttk.Label(newFBScreen, text="Expected format: (XXX) XXX-XXXX", font=(font,9), foreground="gray").place(x=300, y=275)
 
+        # time picker objects to insert open/closing times for each day of the week
         ttk.Label(newFBScreen, text="Monday", font=(font, 9)).place(x=75, y=50)
-        MtimeOpen = time.App(newFBScreen)
+        MtimeOpen = time.App(newFBScreen)       #uses timepicker.py widget
         MtimeOpen.place(x=75, y=75)
         MtimeClose = time.App(newFBScreen)
         MtimeClose.place(x=75, y=100)
@@ -321,12 +359,20 @@ class FBView:
         UtimeClose = time.App(newFBScreen)
         UtimeClose.place(x=675, y=100)
 
+        # button to submit changes
+        submitButton = ttk.Button(newFBScreen, text="Save changes", width=15, command=saveChanges)
+        submitButton.place(x=600, y=250)
+
         # TODO show fb hours database
 
         newFBScreen.mainloop()
 
-    "expecting (XXX) XXX-XXXX"
-    def checkPhoneNum(self, num):
+    def checkPhoneNum(self, num:str)->bool:
+        """ checkPhoneNum(str)
+            Checks if input is of the correct format (XXX) XXX-XXXX
+            Input: A string containing a phone number
+            Output: Return true if of correct format, else returns False.
+        """
         if len(num) != 14: return False
         for i in range(14):
             if i == 0:
@@ -343,15 +389,18 @@ class FBView:
 
 
 class DataView:
+    """DataView: class
+        GUI which allows the user to view and search/filter the data log.
+    """
     def __init__(self, parent):
         self.root = Frame(parent, bg="white")
         root = self.root
+
+        # ========= holds user input of the search criteria =========
         self.foodItemSearchText = StringVar()
         self.ascSort = BooleanVar()
         self.loc_to_update = StringVar()
         self.locations = fetchLocations(Dcursor)
-
-        global font
 
         def fetchData():
             search()
@@ -428,39 +477,49 @@ class DataView:
             else:
                 messagebox.showerror("ERROR", "There are no entries in the database.")
 
+        #====================== user input widgets ======================
         ttk.Label(root, text="Search by item").place(x=675, y=110)
 
+        #prompts for user to search by item
         ItemSearch = ttk.Entry(root, width=25)
         ItemSearch.place(x=675, y=130)
 
+        # prompts for user to search by item ID
         ttk.Label(root, text="Search by item ID").place(x=675, y=170)
         IDSearch = ttk.Entry(root, width=25)
         IDSearch.place(x=675, y=190)
 
+        # prompts for user to search by location
         ttk.Label(root, text="Sort by location").place(x=675, y=230)
         LocationFilter = ttk.Combobox(root, values=self.locations)
         LocationFilter.place(x=675, y=250)
 
-        QuantitySortButton = ttk.Checkbutton(root, text="Sort Ascending", width=15, command=fetchData, onvalue=True,
+        # prompts for user to sort by quantity
+        QuantitySortButton = ttk.Checkbutton(root, text="Sort ascending quantity", width=15, command=fetchData, onvalue=True,
                                              offvalue=False, variable=self.ascSort)
         QuantitySortButton.place(x=675, y=300)
 
+        # Allows user to commit search
         SearchButton = ttk.Button(root, text="Search", width=15, command=fetchData)
         SearchButton.place(x=675, y=350)
 
+        # Allows user to export data log
         exportButton = ttk.Button(root, text="Export data", width=15, command=export)
         exportButton.place(x=675, y=420)
 
-        viewFrame = Frame(root, bd=5, relief='ridge', bg='wheat')
+        # ================== view table =============================================================
+        # (credit due to Jerry Pi)
+        viewFrame = Frame(root, bd=5, relief='ridge', bg='wheat')   #frame to hold data
         viewFrame.place(x=30, y=110, width=600, height=350)
-        # 800
-        xScroll = Scrollbar(viewFrame, orient=HORIZONTAL)
+
+        xScroll = Scrollbar(viewFrame, orient=HORIZONTAL)       #allows user to scroll through table
         yScroll = Scrollbar(viewFrame, orient=VERTICAL)
         table = ttk.Treeview(viewFrame, columns=(
             'item_to_filter', 'quantity_to_filter', 'units', 'fid_to_filter', 'location_to_filter'),
                              xscrollcommand=xScroll.set,
-                             yscrollcommand=yScroll.set)
+                             yscrollcommand=yScroll.set)      #table to display database
 
+        # creates column headerss
         table.heading("item_to_filter", text="item")
         table.heading("quantity_to_filter", text="quantity")
         table.heading("units", text="units")
@@ -474,9 +533,9 @@ class DataView:
         table.column("location_to_filter", width=100)
         table['show'] = 'headings'
 
-        # get all values and pack the table on to the screen
-
+        #connects mouse click with updating item
         table.bind('<ButtonRelease-1>', update)
+        # get all values and pack the table on to the screen
         fetchData()
         table.pack(fill=BOTH, expand=1)
 
