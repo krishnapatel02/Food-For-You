@@ -14,19 +14,17 @@ Modifications:
                Add export function -KP
                Added error checking for times -KP
     3/11/2023: Add neighborhood and phone number input to newFB -KS
-               Added validate phone number function -
+               Added validate phone number function -KS
 
 References:
     EasyA, admin.py from Jerry Pi
         -Recycled code to display database into table and update items from data to database
 """
-
+from utilffy import *
 from tkinter import filedialog
-import timepicker as time
+import timepicker as time           #necessary for time widget in addFB screen
 import csv
 import os
-from utilffy import *
-import datetime
 
 
 #FBconnection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
@@ -508,7 +506,7 @@ class DataView:
         LocationFilter.place(x=675, y=250)
 
         # prompts for user to sort by quantity
-        QuantitySortButton = ttk.Checkbutton(root, text="Sort ascending quantity", width=15, command=fetchData, onvalue=True,
+        QuantitySortButton = ttk.Checkbutton(root, text="Sort ascending quantity", command=fetchData, onvalue=True,
                                              offvalue=False, variable=self.ascSort)
         QuantitySortButton.place(x=675, y=300)
 

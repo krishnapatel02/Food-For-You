@@ -1,13 +1,36 @@
+"""
+Name: staffUI.py
+Created: 3/5/2023
+Authors: Katherine Smirnov, Krishna Patel
+Provides a table view of food items in the databases, allows user to modify food items by updating quantity,
+moving or deletion, and allows insertion of new food items. The table may be sorted by quanity, and filtered by food item,
+food item ID, and location.
+Modifications:
+    3/5/2023: Rough sketch of GUI -KS
+              Added SQL queries, and connected to table widget -KP
+              Added update screen - KS
+    3/7/2023: Modified update screen to allow for "move", "update", "deletion" options -KS
+              Rough implementation of moving items -KP
+    3/8/2023: Added ID search, cleaned up GUI -KS
+    3/9/2023: Fully implementation of insert of deletion -KP
+    3/10/2023: Integrated with util.py -KS
+References:
+    EasyA, admin.py from Jerry Pi
+        -Recycled code to display database into table and update items from data to database
+"""
+
 from utilffy import *
 
 connection = None
 cursor = None
 
-
-
-
 class NewItem:
-    def __init__(self, parent):
+    """ class NewItem(parent)
+        Creates a new window which prompts user to input food item, category, quantity, units, location. Populates
+            database with new item.
+        Input: Parent is the Tkinter screen which the newItem screen is a child of
+    """
+    def __init__(self, parent:Tk):
         #----------------------setting up screen for "New item"---------
         self.screen = Toplevel(parent)      #creates a child window of main screen
         self.screen.title("New Item")
@@ -23,8 +46,6 @@ class NewItem:
         self.units_to_update = StringVar()
         #===========================================================
 
-        global font
-        global searchInputSize
 
         #================== user widgets =============================================================
         ttk.Label(self.screen, text="New Item", font=(font, 13)).place(x=(self.swidth)/2 - 30, y=10)
@@ -95,9 +116,27 @@ class NewItem:
         submitButton = ttk.Button(self.screen, text="Save changes", width=15, command=saveChanges)
         submitButton.place(x=(self.swidth) / 2 - 60, y=250)
 
-
 class UpdateItem:
-    def __init__(self, parent, item, quantity, units, location, food_id):
+    """ class UpdateItem(parent, item, quantity, units, location, food_id)
+    Creates a new window which allows the user to choose to "update", "move", "delete"
+        - Update:
+            - Change the quantity/units of an item at a food bank (cannot change item, category, or location)
+        - Move item from one food bank to another
+            - User selects a desired quantity to move (must be less than the current quantity)
+            - User selects the location to move to
+            - Food item at the moving location is incremented, and current item is decremented.
+            - Combines with items of the same item name at moving location, else creates a new
+                item at such food bank
+        - Delete item from food bank
+
+    Input: Parent is the Tkinter screen which the UpdateItem screen is a child of
+           Item: food item name
+           Quantity: Existing quantity of item
+           Unit: Existing units of item
+           location: Existing locaiton of item
+           food_id: ID of food item
+    """
+    def __init__(self, parent:Tk, item:str, quantity:int, units:str, location:str, food_id:str):
         #----------------------setting up screen for "Update item"---------
         self.screen = Toplevel(parent) #creates a child window of main screen
         screen = self.screen
@@ -112,10 +151,6 @@ class UpdateItem:
         self.units_to_update = StringVar()
         self.screenopt = StringVar() #holds if the user is updating, moving or deleting
         #============== holds what the user inputs =================
-
-
-        global font
-        global searchInputSize
 
         #-------------------------------------------------- input widgets -----------------------------------------
         # user input for food item
@@ -262,6 +297,10 @@ class UpdateItem:
             screen.destroy()
 
         def showScreen(a, b, c):
+            """ ShowScreen
+            Displays the update, move, or delete screen based on what is selected in tabControl
+            Note: Inputs are not used, but required by tkinter command option for dropdowns
+            """
             s = self.screenopt.get()
             #reset to normal state for "update" screen
             quantityinput.configure(state="active")     #reset from "delete"
@@ -298,16 +337,16 @@ class UpdateItem:
         #add action/function to submit button
         submitButton.configure(command=saveChanges)
 
-
-
-#connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
-connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
-cursor = connection.cursor()
-
-
-
-
 class StaffGUI:
+    """ class StaffGUI
+        Displays the food item database as a table, and allows the user to:
+            - Search/Filter: search by item ID, search by item name, filter by location, sort by ascending quantity
+            - Update Item: update quantity, move item to another location, or delete an item
+            - Add Item: Creates a new food item (user must input food item, category, quantity, units, location)
+
+            Note: Each row displays the distinct items by item ID. Each food item at each food bank has a unique food
+                item ID; Similar food items between different food banks have different food item IDs.
+    """
     def __init__(self):
         #----------------------setting up screen for "New item"---------
         self.root = Tk()
@@ -319,6 +358,7 @@ class StaffGUI:
         self.ascSort = BooleanVar()
         self.locations = fetchLocations(cursor)
         use_theme(root)
+
         #-----------------------------setting up background---------------------------------------
         global fetchData
         #structured to catch errors if user does not have background images,
@@ -396,10 +436,12 @@ class StaffGUI:
             units = row[2]
             food_id = row[3]
             location = row[4]
-
             UpdateItem(root, item, quantity, units, location, food_id)
 
         def addItem():
+            """ addItem()
+            Creates a NewItem() class
+            """
             NewItem(root)
 
 
@@ -420,7 +462,7 @@ class StaffGUI:
         LocationFilter.place(x=675, y=250)
 
         # widgets to sort by quantity
-        QuantitySortButton = ttk.Checkbutton(root, text="Sort Ascending", width=15, command=fetchData, onvalue=True,
+        QuantitySortButton = ttk.Checkbutton(root, text="Sort ascending quantity", command=fetchData, onvalue=True,
                                              offvalue=False, variable=self.ascSort)
         QuantitySortButton.place(x=675, y=300)
 
@@ -464,11 +506,10 @@ class StaffGUI:
         root.mainloop()
 
 
+connection = connectToDatabase("jerryp", "111", "ix-dev.cs.uoregon.edu", 3079, "foodforyou")
+#connection = connectToDatabase("kp", "pass", "127.0.0.1", 3306, "foodforyou")
+cursor = connection.cursor()
+
+
+
 StaffGUI()
-
-
-# child = Tk()
-# UpdateItem(child, "apples", 1, "oz", "123 ferry street", 2)
-# child.mainloop()
-#
-
