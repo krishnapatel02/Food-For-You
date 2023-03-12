@@ -572,7 +572,7 @@ root = Tk()                 #creates Tkinter window
 root.protocol("WM_DELETE_WINDOW", onClose)  #sets the window's closing function to onClose()
 root.geometry('900x540')                    #set geometry of screen
 tabControl = ttk.Notebook(root)             #creates "tabs" widget
-use_theme(root, "9")                             #use theme for screen to applied to widgets
+use_theme(root, "10")                             #use theme for screen to applied to widgets
 
 tab1 = FBView(root).root                    #sets food bank view frame as a tab
 tabControl.add(tab1, text="Food Banks")
