@@ -1,3 +1,27 @@
+"""
+Name: staffUI.py
+Created: 3/5/2023
+Authors: Katherine Smirnov, Krishna Patel
+
+Provides a table view of food items in the databases, allows user to modify food items by updating quantity,
+moving or deletion, and allows insertion of new food items. The table may be sorted by quanity, and filtered by food item,
+food item ID, and location.
+
+Modifications:
+    3/5/2023: Rough sketch of GUI -KS
+              Added SQL queries, and connected to table widget -KP
+              Added update screen - KS
+    3/7/2023: Modified update screen to allow for "move", "update", "deletion" options -KS
+              Rough implementation of moving items -KP
+    3/8/2023: Added ID search, cleaned up GUI -KS
+    3/9/2023: Fully implementation of insert of deletion -KP
+    3/10/2023: Integrated with util.py -KS
+
+References:
+    EasyA, admin.py from Jerry Pi
+        -Recycled code to display database into table and update items from data to database
+"""
+
 from utilffy import *
 
 connection = None
@@ -399,7 +423,7 @@ class StaffGUI:
         LocationFilter.place(x=675, y=250)
 
         # widgets to sort by quantity
-        QuantitySortButton = ttk.Checkbutton(root, text="Sort Ascending", width=15, command=fetchData, onvalue=True,
+        QuantitySortButton = ttk.Checkbutton(root, text="Sort ascending quantity", command=fetchData, onvalue=True,
                                              offvalue=False, variable=self.ascSort)
         QuantitySortButton.place(x=675, y=300)
 
@@ -443,10 +467,4 @@ class StaffGUI:
 
 
 StaffGUI()
-
-
-# child = Tk()
-# UpdateItem(child, "apples", 1, "oz", "123 ferry street", 2)
-# child.mainloop()
-#
 
