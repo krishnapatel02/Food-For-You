@@ -38,8 +38,7 @@ Software Dependencies: Python3, mysql.connector-python, tkinter
 
 Directory Structure:
     1. "Food-For-You": Contains all python files needed to run the program (utilffy.py, AdminView.py, staffUI.py,
-    timepicker.py, DonorUI.py, RecipientUI.py), a sample new food bank file (SampleNewFoodBankData.csv),and
-    the README.txt.
+    timepicker.py, DonorUI.py, RecipientUI.py), a sample new food bank file (SampleNewFoodBankData.csv), a copy of the database exported in a sql file (422-finalv2.sql), and the README.txt.
     2. "Documenation": Contains all required documentation such as SRS, SDS, Project Plan, User Documenation, and 
     Programmer Documenation.
     3. "img": Contains all images used by tkinter for our interface themes.
