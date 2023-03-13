@@ -235,25 +235,8 @@ class DonorGUI:
             self.address = self.address.get()
             self.phone = self.phone.get()
 
+            interface.destroy()
             self.query()
-
-            # resets all variables
-            self.location = StringVar()
-            self.location.set(self.all_locations[0])
-            self.category = StringVar()
-            self.category.set(self.all_categories[0])
-            self.open_now = IntVar()
-            self.open_now.set(0)
-            self.hours = IntVar()
-            self.hours.set(0)
-            self.address = IntVar()
-            self.address.set(0)
-            self.phone = IntVar()
-            self.phone.set(0)
-
-            # resets the tkinter window
-            window()
-            interface.update()
 
         # creates the search button and displays it in the tkinter window
         search_button = ttk.Button(interface, text='search', command=search)
