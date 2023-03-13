@@ -18,7 +18,7 @@ from tkinter import messagebox
 font = "Helvetica"
 searchInputSize = "9"
 
-port = 3441     #holds the database port number
+port = 3157     #holds the database port number
 user = "jerryp" #set username for database to variable
 password = "111" #set password for database to variable
 host = "ix-dev.cs.uoregon.edu" #set hostname to variable
