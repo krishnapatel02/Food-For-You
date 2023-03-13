@@ -20,7 +20,6 @@ Modifications:
 """
 
 # libraries used
-
 from tkinter import *
 import mysql.connector as mysql
 import datetime
@@ -75,7 +74,6 @@ def get_category(cursor):
 def get_hours(cursor, fb_id):
     """
     function which retrieves the hours of operation for the food bank specified by the fb_id
-    note: only retrieves the hours for the day the code was run
 
     parameters: MySQL Connector Cursor (mysql.connector.cursor.MySQLCursor)
                 Food Bank ID (int)
@@ -107,6 +105,9 @@ class DonorGUI:
         allows the user to select to display the address, hours, and/or phone number of food banks
     """
     def __init__(self):
+        """
+        Donor GUI constructor
+        """
 
         # creates a tkinter window
         self.interface = Tk()
@@ -185,6 +186,7 @@ class DonorGUI:
             category_menu.place(relx=0.7, rely=0.4, anchor=CENTER)
 
             # creates the checkboxes for the display variables and displays them in the tkinter window
+            # open_now display variable
             open_label = ttk.Label(interface, text='show only open now')
             open_check = ttk.Checkbutton(interface, variable=self.open_now)
             open_label.pack()
@@ -192,6 +194,7 @@ class DonorGUI:
             open_check.pack()
             open_check.place(relx=0.65, rely=0.55, anchor=CENTER)
 
+            # hours display variable
             hours_label = ttk.Label(interface, text='show hours for today')
             hours_check = ttk.Checkbutton(interface, variable=self.hours)
             hours_label.pack()
@@ -199,6 +202,7 @@ class DonorGUI:
             hours_check.pack()
             hours_check.place(relx=0.65, rely=0.60, anchor=CENTER)
 
+            # address display variable
             address_label = ttk.Label(interface, text='show address')
             address_check = ttk.Checkbutton(interface, variable=self.address)
             address_label.pack()
@@ -206,6 +210,7 @@ class DonorGUI:
             address_check.pack()
             address_check.place(relx=0.65, rely=0.65, anchor=CENTER)
 
+            # phone number display variable
             phone_label = ttk.Label(interface, text='show phone number')
             phone_check = ttk.Checkbutton(interface, variable=self.phone)
             phone_label.pack()
@@ -213,6 +218,7 @@ class DonorGUI:
             phone_check.pack()
             phone_check.place(relx=0.65, rely=0.70, anchor=CENTER)
 
+        # creates the tkinter window
         window()
 
         def search():
@@ -262,6 +268,8 @@ class DonorGUI:
         """
         function which retrieves all food banks which match the user's preferences
         """
+
+        # sets neighborhood and category local variables to location and category instance variables
         neighborhood = self.location
         category = self.category
 
@@ -282,7 +290,7 @@ class DonorGUI:
                 f"GROUP BY temp.fb_ID, temp.Location " \
                 f"ORDER BY final_total"
 
-        # executes and returns SQL query
+        # executes the SQL query and returns results
         self.cursor.execute(query)
         results = self.cursor.fetchall()
         self.format_results(results)
@@ -299,14 +307,16 @@ class DonorGUI:
         query = f"SELECT Address, Phone_number, Location FROM food_bank " \
                 f"WHERE fb_ID = {fb_id}"
 
-        # executes SQL query
+        # executes the SQL query and returns results
         self.cursor.execute(query)
         fb_info = self.cursor.fetchall()
         return fb_info
 
     def is_open(self, fb_id):
         """
-        function which checks if the food bank specified by the fd_id is open
+        function which checks if the food bank specified by the fd_id is open at the time of DonorUI being run
+
+        parameter: Food Bank ID (int)
         """
 
         # retrieves the "current" hour and minute, where current is the time at which DonorUI.py was run
@@ -328,6 +338,7 @@ class DonorGUI:
         elif (opening == '00:00:00') and (closing == '00:00:00'):
             now_open = True
         else:
+            # checks if the current time is within the hours of operation
             now_open = (now >= opening) and (now <= closing)
         return now_open
 
@@ -335,21 +346,25 @@ class DonorGUI:
         """
         function which formats the results of the SQL query
 
-        parameter: results
+        parameter: results (list of lists)
         """
 
         fb_ids = []
         fb_info = {}
+        # creates a dictionary to contain the length of the longest address, name, and phone number for formatting purposes
         max_lengths = {"address": 5, "location": 1, "phone": 1}
 
+        # iterates over each item in results
         for item in results:
             fb_id, category, total = item
             fb_id = int(fb_id)
 
+            # if the user opted to only show food banks currently open
             if self.open_now:
                 if not self.is_open(fb_id):
                     continue
 
+            # if the food bank has not been processed
             if fb_id not in fb_info:
                 fb_ids.append(fb_id)
                 info = self.get_food_bank_info(fb_id)
@@ -390,7 +405,7 @@ class DonorGUI:
         function which writes results to file
 
         parameters: Food Bank ID's (list)
-                    [] (dictionary)
+                    max_lengths (dictionary, for formatting purposes)
         """
 
         # strips location and category of all spaces
@@ -427,6 +442,7 @@ class DonorGUI:
 
             f.write("\n")
 
+            # iterates over each food bank in fb_ids list
             for food_bank in fb_ids:
                 location = self.fb_info[food_bank][1]
                 f.write(f"{location:{max_location + 4}}")
@@ -465,6 +481,7 @@ class DonorGUI:
                 print(line.strip())
 
 
+# create a DonorGUI instance
 donor = DonorGUI()
 # closes database connection
 donor.connection.close()
